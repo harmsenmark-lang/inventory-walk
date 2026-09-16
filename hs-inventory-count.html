@@ -553,14 +553,16 @@ function readSheet(wb, sheetName, filename){
 
 function sheetSummary(wb, name){
   var rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, defval:""});
+  var C = detectCols(rows);
   var n = 0, filled = 0;
-  for(var i=5;i<rows.length;i++){
+  for(var i=C.firstData;i<rows.length;i++){
     var r = rows[i];
-    if(!r || !r[1]) continue;
+    if(!r || !r[C.desc]) continue;
     n++;
-    if(parseFloat(r[4]) > 0) filled++;
+    if(parseFloat(r[C.qty]) > 0) filled++;
   }
-  return {items: n, filled: filled, header: (rows[4] && rows[4][4]) ? String(rows[4][4]).trim() : ""};
+  var h = rows[C.headerRow];
+  return {items: n, filled: filled, header: (h && h[C.qty]) ? String(h[C.qty]).trim() : ""};
 }
 
 function showSheetPicker(){
@@ -587,31 +589,63 @@ function showSheetPicker(){
   });
 }
 
+
+/* ====== COLUMN DETECTION ======
+   The Compass report is printed with a varying number of columns:
+   some runs include "Customer #", some do not. Locking column
+   positions by index breaks Pack Type whenever that happens, so
+   resolve every column off the header row by name instead. */
+function detectCols(rows){
+  var hdrRow = 4, r, c;
+  for(r = 0; r < Math.min(rows.length, 10); r++){
+    if(!rows[r]) continue;
+    for(c = 0; c < rows[r].length; c++){
+      if(/item\s*description/i.test(String(rows[r][c] || ""))){ hdrRow = r; r = 99; break; }
+    }
+  }
+  var hdr = rows[hdrRow] || [];
+  function find(re, dflt){
+    for(var i = 0; i < hdr.length; i++){
+      if(re.test(String(hdr[i] || ""))) return i;
+    }
+    return dflt;
+  }
+  return {
+    headerRow: hdrRow,
+    firstData: hdrRow + 1,
+    desc:   find(/item\s*description|description/i, 1),
+    vendor: find(/dist\s*#|item\s*#|product\s*#/i, 2),
+    pack:   find(/pack/i, 5),
+    qty:    find(/blank\s*1|on\s*hand|quantity|count|qty/i, 4)
+  };
+}
+
 function parseRows(rows, filename, sheetName){
   var out = [], lastClass = "";
+  var COL = detectCols(rows);
   // A catalog can list the same vendor number on two rows (different
   // classifications). They are separate lines in the spreadsheet and must
   // stay separate here, or one count would be written to both rows.
   var vendorSeen = {};
-  for(var p=5;p<rows.length;p++){
+  for(var p=COL.firstData;p<rows.length;p++){
     var pr = rows[p];
-    if(!pr || !pr[1]) continue;
+    if(!pr || !pr[COL.desc]) continue;
     var pc = pr[0] ? String(pr[0]).trim().toUpperCase() : "";
     if(pc === "USDA/NOI") continue;
-    var pv = String(pr[2] || pr[3] || "").trim() || ("row" + p);
+    var pv = String(pr[COL.vendor] || "").trim() || ("row" + p);
     vendorSeen[pv] = (vendorSeen[pv] || 0) + 1;
   }
-  for(var i=5;i<rows.length;i++){
+  for(var i=COL.firstData;i<rows.length;i++){
     var row = rows[i];
     if(!row) continue;
     var cls = row[0] ? String(row[0]).trim() : "";
-    var desc = row[1] ? String(row[1]).trim() : "";
+    var desc = row[COL.desc] ? String(row[COL.desc]).trim() : "";
     if(!desc) continue;
     if(cls.toUpperCase() === "USDA/NOI") continue;   // not part of the kitchen count; row stays 0 on export
     if(cls) lastClass = cls; else cls = lastClass;
-    var vendor = String(row[2] || row[3] || "").trim();
+    var vendor = String(row[COL.vendor] || "").trim();
     if(!vendor) vendor = "row" + i;
-    var pack = row[5] ? String(row[5]).toLowerCase().trim() : "";
+    var pack = row[COL.pack] ? String(row[COL.pack]).toLowerCase().trim() : "";
     out.push({
       rowIndex: i,
       key: (vendorSeen[vendor] > 1) ? (vendor + "#" + i) : vendor,
@@ -1494,27 +1528,28 @@ function importLastWeek(file){
                : wb.SheetNames[0];
       var rows = XLSX.utils.sheet_to_json(wb.Sheets[want], {header:1, defval:""});
       var last = {}, cat = {}, found = 0, nonzero = 0;
+      var LC = detectCols(rows);
       // Same duplicate-vendor rule as parseRows, so the carried values line
       // up row for row instead of one row overwriting the other.
       var seen = {};
-      for(var p=5;p<rows.length;p++){
+      for(var p=LC.firstData;p<rows.length;p++){
         var pr = rows[p];
-        if(!pr || !pr[1]) continue;
+        if(!pr || !pr[LC.desc]) continue;
         if((pr[0] ? String(pr[0]).trim().toUpperCase() : "") === "USDA/NOI") continue;
-        var pv = String(pr[2] || pr[3] || "").trim() || ("row" + p);
+        var pv = String(pr[LC.vendor] || "").trim() || ("row" + p);
         seen[pv] = (seen[pv] || 0) + 1;
       }
-      for(var i=5;i<rows.length;i++){
+      for(var i=LC.firstData;i<rows.length;i++){
         var row = rows[i];
-        if(!row || !row[1]) continue;
+        if(!row || !row[LC.desc]) continue;
         var cls = row[0] ? String(row[0]).trim().toUpperCase() : "";
         if(cls === "USDA/NOI") continue;
-        var vendor = String(row[2] || row[3] || "").trim();
+        var vendor = String(row[LC.vendor] || "").trim();
         if(!vendor) continue;
         var kk = (seen[vendor] > 1) ? (vendor + "#" + i) : vendor;
-        var qty = parseFloat(row[4]) || 0;
+        var qty = parseFloat(row[LC.qty]) || 0;
         last[kk] = qty;
-        cat[kk] = String(row[1]).trim();
+        cat[kk] = String(row[LC.desc]).trim();
         found++;
         if(qty > 0) nonzero++;
       }
