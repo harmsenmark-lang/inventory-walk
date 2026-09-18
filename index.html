@@ -740,10 +740,52 @@ function doImport(wb, sheetName, fileName){
   var p = parseRows(rows, fileName, sheetName);
   if(!p.items.length){ alert("No items found on that tab."); return; }
 
-  var keep = false;
-  if(Object.keys(S.db).length){
-    keep = confirm("You have counts in progress.\n\nOK — keep them and just refresh the item list.\nCancel — start a clean count.");
-  }
+  /* Nothing counted yet — nothing to decide. */
+  if(!Object.keys(S.db).length){ finishImport(rows, p, false); return; }
+  askKeepOrClear(rows, p);
+}
+
+/* Starting a new week versus reloading mid-count are very different things,
+   and the wrong pick quietly ruins a count: keeping last week's numbers makes
+   this week look already done, and nothing gets filed as "last". So say which
+   one is normal rather than offering a bare OK/Cancel. */
+function askKeepOrClear(rows, p){
+  var n = 0, zero = 0;
+  Object.keys(S.db).forEach(function(k){
+    var r = S.db[k];
+    if(r.st === "counted") n++;
+    else if(r.st === "zero") zero++;
+  });
+
+  openModal(
+    '<h2>You have a count in progress</h2>' +
+    '<div class="note"><b>' + (n + zero) + ' items counted</b>' +
+    (S.meta ? ' on ' + esc(S.meta.file || "the current sheet") : "") + '.</div>' +
+    '<div class="locpick">' +
+      '<button data-k="clear">Start a clean count' +
+        '<div class="hint"><b>This is the normal choice for a new week.</b> ' +
+        'Clears the numbers and files them as last week\'s, so every item gets a ' +
+        '<b>Use last</b> button. Your rooms, placements and nicknames are untouched.</div></button>' +
+      '<button data-k="keep">Keep the numbers I have' +
+        '<div class="hint"><b>Only if you are mid-count on this same count</b> — a corrected export, ' +
+        'or a sheet you reloaded by accident. On a new week this makes it look like the count is already ' +
+        'done, and nothing gets filed as last week\'s.</div></button>' +
+    '</div>' +
+    '<button class="bigbtn ghost" id="kcCancel">Cancel — do not load anything</button>',
+    function(root){
+      root.querySelectorAll("[data-k]").forEach(function(b){
+        b.onclick = function(){
+          var keep = b.dataset.k === "keep";
+          closeModal();
+          finishImport(rows, p, keep);
+        };
+      });
+      root.querySelector("#kcCancel").onclick = closeModal;
+    }
+  );
+}
+
+function finishImport(rows, p, keep){
   /* Roster diff against the previous import. Compass adds items and almost
      never drops them, so a removal is worth seeing. */
   var prev = load(K.last, null);
@@ -800,7 +842,7 @@ function doImport(wb, sheetName, fileName){
   var packMissing = S.items.filter(function(it){ return !it.pack; }).length;
   openModal(
     '<h2>Imported</h2>' +
-    '<div class="note good"><b>' + p.items.length + ' items</b> from ' + esc(sheetName) + '.<br>' +
+    '<div class="note good"><b>' + p.items.length + ' items</b> from ' + esc(p.meta.sheet) + '.<br>' +
     'Count column: <b>' + esc(p.cols.qtyHeader || "column " + (p.cols.qty + 1)) + '</b> · ' +
     'pack sizes: <b>' + (packMissing === p.items.length ? "not in this report" : "column " + (p.cols.pack + 1)) + '</b></div>' +
     '<table class="sum"><tr><td>Already placed</td><td class="n">' + placed + '</td></tr>' +
