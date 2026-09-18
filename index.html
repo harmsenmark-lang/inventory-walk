@@ -265,6 +265,64 @@ table.sum td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:60
 .filters button[aria-pressed="true"]{background:var(--amber);color:#fff}
 .room.unplaced{border-left-color:var(--amber);background:var(--amber-soft)}
 .room.unplaced .ct{color:var(--amber)}
+
+/* ==========================================================================
+   PRINTABLE ROOM SHEETS
+   Hidden on screen; only this area prints.
+   ========================================================================== */
+#printarea{display:none}
+body.printing #printarea{display:block}
+
+@media print{
+  #bar,#pillwrap,.wrap,#foot,.modal{display:none !important}
+  body{background:#fff;padding:0}
+  #printarea{display:block}
+  .page.brk{page-break-before:always}
+  .psheet thead{display:table-header-group}
+  .psheet tr{page-break-inside:avoid}
+  @page{margin:12mm 10mm}
+}
+
+.sheetdoc{background:#fff;color:#000;font-size:10pt;line-height:1.3}
+.sheetdoc .ph{border-bottom:2.5px solid #000;padding-bottom:5px;margin-bottom:9px}
+.sheetdoc h1{font-size:19pt;margin:0;letter-spacing:-.01em;text-transform:uppercase}
+.sheetdoc .pm{font-size:8.5pt;color:#444;margin-top:2px}
+.sheetdoc .pempty{color:#666;font-style:italic;padding:16px 0}
+
+table.psheet{width:100%;border-collapse:collapse}
+table.psheet th{
+  text-align:left;font-size:7.5pt;text-transform:uppercase;letter-spacing:.07em;
+  color:#333;border-bottom:1.5px solid #000;padding:3px 5px;font-weight:700;
+}
+table.psheet td{border-bottom:1px solid #C8C8C8;padding:5px;vertical-align:middle}
+table.psheet td.c,table.psheet th.c{width:22px;text-align:center}
+.sheetdoc .box{
+  display:inline-block;width:13px;height:13px;
+  border:1.4px solid #000;border-radius:2px;vertical-align:middle;
+}
+table.psheet td.nm{font-weight:700;font-size:10pt;line-height:1.2}
+table.psheet td.pk,table.psheet td.vn{
+  font-size:8.5pt;color:#333;white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+table.psheet td.vn{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+table.psheet th.bcth,table.psheet td.bcd{width:150px;text-align:right}
+table.psheet td.bcd svg.bc{height:26px;width:auto;max-width:148px;display:inline-block}
+table.psheet th.qc,table.psheet td.qc{width:62px;border-left:1px solid #C8C8C8}
+table.psheet tr.fl td{background:#F4F4F4}
+.sheetdoc .warnx{
+  display:block;font-size:7.5pt;font-weight:600;color:#000;
+  text-transform:uppercase;letter-spacing:.04em;margin-top:2px;
+}
+table.psheet.wr{margin-top:8px;border-top:2px solid #000}
+table.psheet.wr td.wrl{color:#888;font-size:8.5pt;font-style:italic}
+.sheetdoc .pfoot{font-size:8pt;color:#555;margin-top:7px}
+
+/* ---------- classification mapping ---------- */
+select.cmsel{
+  flex:none;max-width:190px;background:var(--surface);
+  border:1px solid var(--line-strong);border-radius:var(--r);
+  padding:9px 8px;font-size:14px;font-weight:600;
+}
 </style>
 </head>
 <body>
@@ -306,6 +364,8 @@ table.sum td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:60
   <button id="finishBtn" class="hide">Finish</button>
 </div>
 
+<div id="printarea"></div>
+
 <input type="file" id="file" accept=".xlsx,.xls" style="position:absolute;left:-9999px">
 <input type="file" id="mapfile" accept=".json" style="position:absolute;left:-9999px">
 
@@ -334,7 +394,70 @@ var o=((a=s[17])==null?void 0:a[0])?Ob(e,e[_b(s[17][0].data)][0]):[];var l=vb(s[
 var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.s.r;c<=n.e.r;++c){i=Ta(c);for(f=n.s.c;f<=n.e.c;++f){r=s[f]+i;t=l?(e[c]||[])[f]:e[r];a="";if(t===undefined)continue;else if(t.F!=null){r=t.F;if(!t.f)continue;a=t.f;if(r.indexOf(":")==-1)r=r+":"+r}if(t.f!=null)a=t.f;else if(t.t=="z")continue;else if(t.t=="n"&&t.v!=null)a=""+t.v;else if(t.t=="b")a=t.v?"TRUE":"FALSE";else if(t.w!==undefined)a="'"+t.w;else if(t.v===undefined)continue;else if(t.t=="s")a="'"+t.v;else a=""+t.v;o[o.length]=r+"="+a}}return o}function xw(e,r,t){var a=t||{};var n=+!a.skipHeader;var i=e||{};var s=0,f=0;if(i&&a.origin!=null){if(typeof a.origin=="number")s=a.origin;else{var o=typeof a.origin=="string"?Oa(a.origin):a.origin;s=o.r;f=o.c}}var l;var c={s:{c:0,r:0},e:{c:f,r:s+r.length-1+n}};if(i["!ref"]){var h=Da(i["!ref"]);c.e.c=Math.max(c.e.c,h.e.c);c.e.r=Math.max(c.e.r,h.e.r);if(s==-1){s=h.e.r+1;c.e.r=s+r.length-1+n}}else{if(s==-1){s=0;c.e.r=r.length-1+n}}var u=a.header||[],d=0;r.forEach(function(e,r){rr(e).forEach(function(t){if((d=u.indexOf(t))==-1)u[d=u.length]=t;var o=e[t];var c="z";var h="";var v=Ra({c:f+d,r:s+r+n});l=Rw(i,v);if(o&&typeof o==="object"&&!(o instanceof Date)){i[v]=o}else{if(typeof o=="number")c="n";else if(typeof o=="boolean")c="b";else if(typeof o=="string")c="s";else if(o instanceof Date){c="d";if(!a.cellDates){c="n";o=fr(o)}h=a.dateNF||X[14]}else if(o===null&&a.nullError){c="e";o=0}if(!l)i[v]=l={t:c,v:o};else{l.t=c;l.v=o;delete l.w;delete l.R;if(h)l.z=h}if(h)l.z=h}})});c.e.c=Math.max(c.e.c,f+u.length-1);var v=Ta(s);if(n)for(d=0;d<u.length;++d)i[ya(d+f)+v]={t:"s",v:u[d]};i["!ref"]=Na(c);return i}function Ow(e,r){return xw(null,e,r)}function Rw(e,r,t){if(typeof r=="string"){if(Array.isArray(e)){var a=Oa(r);if(!e[a.r])e[a.r]=[];return e[a.r][a.c]||(e[a.r][a.c]={t:"z"})}return e[r]||(e[r]={t:"z"})}if(typeof r!="number")return Rw(e,Ra(r));return Rw(e,Ra({r:r,c:t||0}))}function Iw(e,r){if(typeof r=="number"){if(r>=0&&e.SheetNames.length>r)return r;throw new Error("Cannot find sheet # "+r)}else if(typeof r=="string"){var t=e.SheetNames.indexOf(r);if(t>-1)return t;throw new Error("Cannot find sheet name |"+r+"|")}else throw new Error("Cannot find sheet |"+r+"|")}function Nw(){return{SheetNames:[],Sheets:{}}}function Dw(e,r,t,a){var n=1;if(!t)for(;n<=65535;++n,t=undefined)if(e.SheetNames.indexOf(t="Sheet"+n)==-1)break;if(!t||e.SheetNames.length>=65535)throw new Error("Too many worksheets");if(a&&e.SheetNames.indexOf(t)>=0){var i=t.match(/(^.*?)(\d+)$/);n=i&&+i[2]||0;var s=i&&i[1]||t;for(++n;n<=65535;++n)if(e.SheetNames.indexOf(t=s+n)==-1)break}Jp(t);if(e.SheetNames.indexOf(t)>=0)throw new Error("Worksheet with name |"+t+"| already exists!");e.SheetNames.push(t);e.Sheets[t]=r;return t}function Fw(e,r,t){if(!e.Workbook)e.Workbook={};if(!e.Workbook.Sheets)e.Workbook.Sheets=[];var a=Iw(e,r);if(!e.Workbook.Sheets[a])e.Workbook.Sheets[a]={};switch(t){case 0:;case 1:;case 2:break;default:throw new Error("Bad sheet visibility setting "+t);}e.Workbook.Sheets[a].Hidden=t}function Pw(e,r){e.z=r;return e}function Lw(e,r,t){if(!r){delete e.l}else{e.l={Target:r};if(t)e.l.Tooltip=t}return e}function Mw(e,r,t){return Lw(e,"#"+r,t)}function Uw(e,r,t){if(!e.c)e.c=[];e.c.push({t:r,a:t||"SheetJS"})}function Bw(e,r,t,a){var n=typeof r!="string"?r:Da(r);var i=typeof r=="string"?r:Na(r);for(var s=n.s.r;s<=n.e.r;++s)for(var f=n.s.c;f<=n.e.c;++f){var o=Rw(e,s,f);o.t="n";o.F=i;delete o.v;if(s==n.s.r&&f==n.s.c){o.f=t;if(a)o.D=true}}return e}var Ww={encode_col:ya,encode_row:Ta,encode_cell:Ra,encode_range:Na,decode_col:Ca,decode_row:ka,split_cell:xa,decode_cell:Oa,decode_range:Ia,format_cell:Pa,sheet_add_aoa:Ma,sheet_add_json:xw,sheet_add_dom:Gm,aoa_to_sheet:Ua,json_to_sheet:Ow,table_to_sheet:jm,table_to_book:Xm,sheet_to_csv:yw,sheet_to_txt:Sw,sheet_to_json:Aw,sheet_to_html:Vm,sheet_to_formulae:_w,sheet_to_row_object_array:Aw,sheet_get_cell:Rw,book_new:Nw,book_append_sheet:Dw,book_set_sheet_visibility:Fw,cell_set_number_format:Pw,cell_set_hyperlink:Lw,cell_set_internal_link:Mw,cell_add_comment:Uw,sheet_set_array_formula:Bw,consts:{SHEET_VISIBLE:0,SHEET_HIDDEN:1,SHEET_VERY_HIDDEN:2}};var Hw;function zw(e){Hw=e}function Vw(e,r){var t=Hw();var a=r==null?{}:r;if(e==null||e["!ref"]==null){t.push(null);return t}var n=Da(e["!ref"]);var i=a.FS!==undefined?a.FS:",",s=i.charCodeAt(0);var f=a.RS!==undefined?a.RS:"\n",o=f.charCodeAt(0);var l=new RegExp((i=="|"?"\\|":i)+"+$");var c="",h=[];a.dense=Array.isArray(e);var u=a.skipHidden&&e["!cols"]||[];var d=a.skipHidden&&e["!rows"]||[];for(var v=n.s.c;v<=n.e.c;++v)if(!(u[v]||{}).hidden)h[v]=ya(v);var p=n.s.r;var g=false,m=0;t._read=function(){if(!g){g=true;return t.push("\ufeff")}while(p<=n.e.r){++p;if((d[p-1]||{}).hidden)continue;c=Cw(e,n,p-1,h,s,o,i,a);if(c!=null){if(a.strip)c=c.replace(l,"");if(c||a.blankrows!==false)return t.push((m++?f:"")+c)}}return t.push(null)};return t}function Gw(e,r){var t=Hw();var a=r||{};var n=a.header!=null?a.header:Bm;var i=a.footer!=null?a.footer:Wm;t.push(n);var s=Ia(e["!ref"]);a.dense=Array.isArray(e);t.push(zm(e,s,a));var f=s.s.r;var o=false;t._read=function(){if(f>s.e.r){if(!o){o=true;t.push("</table>"+i)}return t.push(null)}while(f<=s.e.r){t.push(Um(e,s,f,a));++f;break}};return t}function jw(e,r){var t=Hw({objectMode:true});if(e==null||e["!ref"]==null){t.push(null);return t}var a={t:"n",v:0},n=0,i=1,s=[],f=0,o="";var l={s:{r:0,c:0},e:{r:0,c:0}};var c=r||{};var h=c.range!=null?c.range:e["!ref"];if(c.header===1)n=1;else if(c.header==="A")n=2;else if(Array.isArray(c.header))n=3;switch(typeof h){case"string":l=Da(h);break;case"number":l=Da(e["!ref"]);l.s.r=h;break;default:l=h;}if(n>0)i=0;var u=Ta(l.s.r);var d=[];var v=0;var p=Array.isArray(e);var g=l.s.r,m=0;var b={};if(p&&!e[g])e[g]=[];var w=c.skipHidden&&e["!cols"]||[];var k=c.skipHidden&&e["!rows"]||[];for(m=l.s.c;m<=l.e.c;++m){if((w[m]||{}).hidden)continue;d[m]=ya(m);a=p?e[g][m]:e[d[m]+u];switch(n){case 1:s[m]=m-l.s.c;break;case 2:s[m]=d[m];break;case 3:s[m]=c.header[m-l.s.c];break;default:if(a==null)a={w:"__EMPTY",t:"s"};o=f=Pa(a,null,c);v=b[f]||0;if(!v)b[f]=1;else{do{o=f+"_"+v++}while(b[o]);b[f]=v;b[o]=1}s[m]=o;}}g=l.s.r+i;t._read=function(){while(g<=l.e.r){if((k[g-1]||{}).hidden)continue;var r=Tw(e,l,g,d,n,s,p,c);++g;if(r.isempty===false||(n===1?c.blankrows!==false:!!c.blankrows)){t.push(r.row);return}}return t.push(null)};return t}var Xw={to_json:jw,to_html:Gw,to_csv:Vw,set_readable:zw};if(typeof vm!=="undefined")e.parse_xlscfb=vm;e.parse_zip=Xb;e.read=iw;e.readFile=sw;e.readFileSync=sw;e.write=gw;e.writeFile=bw;e.writeFileSync=bw;e.writeFileAsync=kw;e.utils=Ww;e.writeXLSX=pw;e.writeFileXLSX=ww;e.SSF=Ve;if(typeof Xw!=="undefined")e.stream=Xw;if(typeof Ke!=="undefined")e.CFB=Ke;if(typeof require!=="undefined"){var $w=undefined;if(($w||{}).Readable)zw($w.Readable)}}if(typeof exports!=="undefined")make_xlsx_lib(exports);else if(typeof module!=="undefined"&&module.exports)make_xlsx_lib(module.exports);else if(typeof define==="function"&&define.amd)define("xlsx",function(){if(!XLSX.version)make_xlsx_lib(XLSX);return XLSX});else make_xlsx_lib(XLSX);if(typeof window!=="undefined"&&!window.XLSX)try{window.XLSX=XLSX}catch(e){}
 
 </script>
-<script>var SEED={"places":{"4752":"Milk Coolers","6926":"Milk Coolers","10120":"WALK IN COOLER","10126":"WALK IN COOLER","10187":"WALK IN COOLER","10197":"NOT STOCKED","10315":"WALK IN COOLER","10338":"WALK IN COOLER","10511":"WALK IN COOLER","10517":"NOT STOCKED","10642":"PANTRY","10751":"NOT STOCKED","10922":"WALK IN COOLER","10962":"WALK IN COOLER","11011":"WALK IN COOLER","11026":"WALK IN COOLER","11034":"WALK IN COOLER","11073":"NOT STOCKED","11100":"NOT STOCKED","11110":"NOT STOCKED","11406":"WALK IN COOLER","11483":"WALK IN COOLER","11495":"WALK IN COOLER","12266":"NOT STOCKED","12385":"WALK IN COOLER","20800":"NOT STOCKED","20837":"WALK IN COOLER","21036":"PANTRY","21449":"WALK IN COOLER","21600":"WALK IN COOLER","21905":"WALK IN COOLER","23025":"NOT STOCKED","30130":"WALK IN COOLER","30234":"WALK IN COOLER","30257":"WALK IN COOLER","30340":"WALK IN COOLER","30400":"NOT STOCKED","30405":"WALK IN COOLER","31321":"DRINK DISPLAY COOLER","33119":"WALK IN COOLER","51535":"WALK IN COOLER","53460":"WALK IN COOLER","100018":"NOT STOCKED","100206":"NOT STOCKED","100212":"PANTRY","100219":"PANTRY","100225":"PANTRY","100256":"FREEZER #2","100293":"NOT STOCKED","100364":"NOT STOCKED","110361":"NOT STOCKED","110396":"NOT STOCKED","110541":"NOT STOCKED","110859":"FREEZER #2","110860":"FREEZER #1","1000290":"WALK IN COOLER","1000511":"WALK IN COOLER","1000673":"WALK IN COOLER","1001529":"WALK IN COOLER","1001899":"WALK IN COOLER","1008093":"WALK IN COOLER","1024421":"FREEZER #2","1038421":"FREEZER #2","1053826":"FREEZER #2","1146911":"SERVICE TABLE #2","1166156":"PANTRY","1177955":"FREEZER #1","1218387":"PANTRY","1333434":"PANTRY","1339534":"FREEZER #1","1368598":"PANTRY","1400482":"BREAKFAST STORAGE ROOM","1412659":"FREEZER #2","1435197":"FREEZER #2","1436171":"NOT STOCKED","1605617":"DRINK DISPLAY COOLER","1606490":"NOT STOCKED","1608734":"PANTRY","1837461":"FREEZER #1","1841651":"FREEZER #1","1877034":"FREEZER #2","1898651":"PANTRY","1898677":"PANTRY","1898891":"PANTRY","1898935":"NOT STOCKED","1899063":"BREAKFAST STORAGE ROOM","1899077":"BREAKFAST STORAGE ROOM","1899085":"NOT STOCKED","1913047":"NOT STOCKED","1913066":"BREAKFAST STORAGE ROOM","1917899":"COOKS TABLE","1924697":"PANTRY","2030852":"FREEZER #1","2093213":"NOT STOCKED","2093650":"FREEZER #2","2093682":"FREEZER #2","2098071":"FREEZER #2","2098269":"BREAKFAST STORAGE ROOM","2099341":"CHEMICAL STORAGE ROOM","2110902":"PANTRY","2155830":"FREEZER #1","2173090":"FREEZER #1","2173379":"FREEZER #2","2173393":"FREEZER #1","2188045":"FREEZER #1","2188058":"FREEZER #1","2189819":"NOT STOCKED","2198380":"FREEZER #2","2223453":"WALK IN COOLER","2270449":"PANTRY","2285393":"FREEZER #1","2310036":"BREAKFAST STORAGE ROOM","2354346":"FREEZER #2","2354359":"FREEZER #2","2355586":"FREEZER #2","2355590":"FREEZER #2","2365725":"FREEZER #1","2391201":"FREEZER #1","2399330":"FREEZER #1","2410377":"FREEZER #1","2429007":"NOT STOCKED","2435907":"PANTRY","2463164":"WALK IN COOLER","2476754":"WALK IN COOLER","2525624":"FREEZER #1","2528636":"WALK IN COOLER","2604603":"NOT STOCKED","2611739":"PANTRY","2683098":"PANTRY","2683110":"PANTRY","2683123":"NOT STOCKED","2746405":"FREEZER #1","2880189":"PANTRY","2950725":"BREAKFAST STORAGE ROOM","2972828":"FREEZER #2","2972895":"WALK IN COOLER","2975203":"FREEZER #2","2981429":"NOT STOCKED","2999751":"SERVICE TABLE #1","2999768":"SERVICE TABLE #1","2999771":"SERVICE TABLE #1","3143429":"FREEZER #2","3144232":"FREEZER #2","3162569":"PANTRY","3189356":"BREAKFAST STORAGE ROOM","3268871":"PANTRY","3282809":"FREEZER #2","3290394":"BREAKFAST STORAGE ROOM","3295031":"NOT STOCKED","3363365":"PANTRY","3373931":"NOT STOCKED","3441407":"NOT STOCKED","3532975":"FREEZER #2","3533486":"FREEZER #2","3560143":"PANTRY","3593111":"PANTRY","3593409":"PANTRY","3624390":"PANTRY","3627175":"PANTRY","3716578":"SERVICE TABLE #2","3718210":"SERVICE TABLE #2","3724614":"SERVICE TABLE #2","3727526":"SERVICE TABLE #2","3747132":"NOT STOCKED","3831153":"FREEZER #2","3931221":"BREAKFAST STORAGE ROOM","3939380":"PANTRY","4003190":"COOKS TABLE","4010476":"PANTRY","4025682":"CHEMICAL STORAGE ROOM","4030664":"PANTRY","4032991":"PANTRY","4040382":"NOT STOCKED","4040895":"SERVICE TABLE #1","4044640":"NOT STOCKED","4045415":"SERVICE TABLE #1","4066353":"PANTRY","4073847":"PANTRY","4087508":"COOKS TABLE","4099313":"BREAKFAST STORAGE ROOM","4106498":"NOT STOCKED","4146510":"BREAKFAST STORAGE ROOM","4161475":"BREAKFAST STORAGE ROOM","4212595":"NOT STOCKED","4235693":"FREEZER #2","4260523":"FREEZER #2","4295360":"BREAKFAST STORAGE ROOM","4313920":"FREEZER #1","4342812":"PANTRY","4358974":"NOT STOCKED","4358990":"SERVICE TABLE #2","4360776":"PANTRY","4383768":"PANTRY","4384214":"WALK IN COOLER","4394417":"SERVICE TABLE #2","4402436":"PANTRY","4407233":"FREEZER #2","4407427":"PANTRY","4434140":"NOT STOCKED","4526366":"FREEZER #1","4533535":"SERVICE TABLE #2","4560850":"NOT STOCKED","4563383":"PANTRY","4583290":"COOKS TABLE","4614830":"NOT STOCKED","4673687":"NOT STOCKED","4676437":"BREAKFAST STORAGE ROOM","4679009":"WALK IN COOLER","4705257":"WALK IN COOLER","4710093":"FREEZER #1","4812046":"NOT STOCKED","4827832":"COOKS TABLE","4897641":"WALK IN COOLER","4933933":"PANTRY","4987343":"PANTRY","4995726":"FREEZER #2","5044995":"PANTRY","5073130":"PANTRY","5076627":"NOT STOCKED","5096413":"SERVICE TABLE #2","5096431":"SERVICE TABLE #2","5102660":"PANTRY","5108253":"PANTRY","5135136":"NOT STOCKED","5152932":"DRINK DISPLAY COOLER","5152966":"DRINK DISPLAY COOLER","5174735":"SERVICE TABLE #1","5181904":"CHEMICAL STORAGE ROOM","5211552":"PANTRY","5224989":"FREEZER #1","5226091":"CHEMICAL STORAGE ROOM","5228630":"COOKS TABLE","5229026":"COOKS TABLE","5229109":"COOKS TABLE","5229125":"COOKS TABLE","5229224":"COOKS TABLE","5258272":"NOT STOCKED","5264320":"NOT STOCKED","5274891":"WALK IN COOLER","5275399":"FREEZER #1","5278718":"NOT STOCKED","5321906":"WALK IN COOLER","5397734":"FREEZER #2","5487594":"CHEMICAL STORAGE ROOM","5556669":"FREEZER #1","5560271":"PANTRY","5590948":"PANTRY","5713991":"FREEZER #2","5725765":"NOT STOCKED","5773007":"FREEZER #2","5854377":"SERVICE TABLE #2","5856018":"PANTRY","5889407":"BREAKFAST STORAGE ROOM","5913454":"COOKS TABLE","5913504":"COOKS TABLE","5920855":"PANTRY","5946629":"PANTRY","6011308":"PANTRY","6040760":"COOKS TABLE","6055800":"BREAKFAST STORAGE ROOM","6098317":"PANTRY","6198768":"FREEZER #1","6204640":"DRINK DISPLAY COOLER","6233441":"PANTRY","6290435":"BREAKFAST STORAGE ROOM","6320545":"NOT STOCKED","6321299":"NOT STOCKED","6341384":"NOT STOCKED","6404743":"PANTRY","6469217":"PANTRY","6599405":"BREAKFAST STORAGE ROOM","6626774":"PANTRY","6631305":"WALK IN COOLER","6639165":"COOKS TABLE","6697890":"WALK IN COOLER","6715957":"PANTRY","6725313":"NOT STOCKED","6725335":"NOT STOCKED","6743086":"PANTRY","6817399":"BREAKFAST STORAGE ROOM","6902340":"WALK IN COOLER","6937734":"PANTRY","6938377":"COOKS TABLE","7000867":"FREEZER #2","7000927":"PANTRY","7000990":"FREEZER #1","7001014":"NOT STOCKED","7012485":"PANTRY","7014347":"FREEZER #1","7018135":"WALK IN COOLER","7024298":"BREAKFAST STORAGE ROOM","7027515":"FREEZER #1","7028113":"COOKS TABLE","7028513":"CHEMICAL STORAGE ROOM","7028520":"CHEMICAL STORAGE ROOM","7031084":"WALK IN COOLER","7032893":"FREEZER #1","7038397":"PANTRY","7040034":"PANTRY","7041945":"FREEZER #2","7048836":"WALK IN COOLER","7063259":"WALK IN COOLER","7063361":"WALK IN COOLER","7072170":"BREAKFAST STORAGE ROOM","7072180":"NOT STOCKED","7072182":"BREAKFAST STORAGE ROOM","7072203":"NOT STOCKED","7094442":"FREEZER #1","7095624":"PANTRY","7096459":"SERVICE TABLE #2","7111727":"NOT STOCKED","7114141":"SERVICE TABLE #1","7114148":"SERVICE TABLE #1","7116960":"BREAKFAST STORAGE ROOM","7118402":"PANTRY","7142310":"FREEZER #2","7143888":"NOT STOCKED","7147450":"PANTRY","7150133":"FREEZER #1","7156688":"NOT STOCKED","7164495":"FREEZER #2","7180144":"PANTRY","7190735":"NOT STOCKED","7191498":"FREEZER #1","7199075":"BREAKFAST STORAGE ROOM","7199076":"BREAKFAST STORAGE ROOM","7200068":"PANTRY","7202759":"PANTRY","7214355":"FREEZER #1","7227725":"WALK IN COOLER","7228214":"BREAKFAST STORAGE ROOM","7256021":"WALK IN COOLER","7256809":"WALK IN COOLER","7256898":"WALK IN COOLER","7274886":"WALK IN COOLER","7279628":"NOT STOCKED","7279632":"SERVICE TABLE #2","7279721":"SERVICE TABLE #2","7311734":"FREEZER #1","7313495":"FREEZER #1","7336158":"NOT STOCKED","7336169":"BREAKFAST STORAGE ROOM","7346071":"PANTRY","7346481":"PANTRY","7353887":"NOT STOCKED","7358764":"PANTRY","7360691":"NOT STOCKED","7377238":"FREEZER #1","7379313":"FREEZER #1","7391234":"PANTRY","7401141":"COOKS TABLE","7431230":"FREEZER #2","7431244":"FREEZER #2","7449051":"PANTRY","7663113":"COOKS TABLE","7700812":"NOT STOCKED","7702261":"PANTRY","7728403":"FREEZER #2","7733464":"FREEZER #2","7762329":"NOT STOCKED","7794656":"BREAKFAST STORAGE ROOM","7826286":"FREEZER #1","7861931":"SERVICE TABLE #2","7863540":"SERVICE TABLE #2","7925787":"FREEZER #1","7977509":"CHEMICAL STORAGE ROOM","8026122":"NOT STOCKED","8108847":"NOT STOCKED","8162673":"FREEZER #2","8239446":"PANTRY","8265191":"BREAKFAST STORAGE ROOM","8266157":"BREAKFAST STORAGE ROOM","8344303":"BREAKFAST STORAGE ROOM","8610051":"FREEZER #2","8653952":"WALK IN COOLER","8713350":"FREEZER #1","8737433":"PANTRY","8775318":"BREAKFAST STORAGE ROOM","8845168":"FREEZER #2","8880047":"NOT STOCKED","9237835":"NOT STOCKED","9387317":"BREAKFAST STORAGE ROOM","9442088":"NOT STOCKED","9688367":"NOT STOCKED","9806415":"COOKS TABLE","9806423":"COOKS TABLE","9806449":"NOT STOCKED","9806472":"COOKS TABLE","9901031":"NOT STOCKED","9902666":"SERVICE TABLE #2","9980186":"COOKS TABLE","0668873":"WALK IN COOLER","0557074":"WALK IN COOLER","0556076":"WALK IN COOLER","0090811":"FREEZER #1","0533485":"FREEZER #1","0041620":"FREEZER #1","0013553":"FREEZER #1","0139610":"FREEZER #2","0397087":"FREEZER #2","0807996":"FREEZER #1","0079634":"PANTRY","0075048":"PANTRY","0075079":"PANTRY","0445062":"PANTRY","0496026":"PANTRY","0795086":"PANTRY","0352074":"PANTRY","001543":"ICE CREAM FREEZER","002175":"ICE CREAM FREEZER","001997":"ICE CREAM FREEZER","001995":"ICE CREAM FREEZER","001982":"ICE CREAM FREEZER","001996":"ICE CREAM FREEZER","0748762":"FREEZER #1","001987":"ICE CREAM FREEZER","001540":"ICE CREAM FREEZER","001977":"ICE CREAM FREEZER","0444598":"BREAKFAST STORAGE ROOM","0445088":"PANTRY","CUST-4752":"Milk Coolers","CUST-6926":"Milk Coolers"},"units":{"4752":{"u":50,"m":1},"6926":{"u":50,"m":1},"10120":{"u":4,"m":0},"10126":{"u":6,"m":0},"10187":{"u":12,"m":0},"10315":{"u":14,"m":0},"10511":{"u":6,"m":0},"10517":{"u":1,"m":0},"10751":{"u":1,"m":0},"11011":{"u":4,"m":0},"11026":{"u":4,"m":0},"11034":{"u":1,"m":0},"11483":{"u":1,"m":0},"11495":{"u":1,"m":1},"12385":{"u":1,"m":1},"21036":{"u":2,"m":0},"21600":{"u":1,"m":0},"21905":{"u":1,"m":1},"30130":{"u":4,"m":0},"30257":{"u":4,"m":1},"30340":{"u":4,"m":0},"30400":{"u":4,"m":0},"30405":{"u":4,"m":0},"31321":{"u":24,"m":1},"33119":{"u":1,"m":1},"53460":{"u":1,"m":1},"100018":{"u":6,"m":0},"100206":{"u":1,"m":0},"100212":{"u":1,"m":1},"100219":{"u":1,"m":1},"100293":{"u":1,"m":0},"100364":{"u":6,"m":0},"110361":{"u":1,"m":0},"110396":{"u":1,"m":0},"1000290":{"u":4,"m":0},"1000673":{"u":4,"m":0},"1001529":{"u":4,"m":1},"1008093":{"u":1,"m":0},"1024421":{"u":1,"m":1},"1053826":{"u":12,"m":0},"1146911":{"u":1000,"m":0},"1177955":{"u":2,"m":1},"1218387":{"u":6,"m":0},"1339534":{"u":12,"m":0},"1436171":{"u":70,"m":0},"1605617":{"u":24,"m":1},"1606490":{"u":24,"m":1},"1608734":{"u":6,"m":0},"1837461":{"u":4,"m":0},"1841651":{"u":250,"m":0},"1898651":{"u":96,"m":0},"1898677":{"u":96,"m":0},"1898891":{"u":96,"m":1},"1913047":{"u":96,"m":0},"1913066":{"u":96,"m":1},"1917899":{"u":6,"m":0},"1924697":{"u":104,"m":1},"2030852":{"u":5,"m":0},"2098071":{"u":72,"m":0},"2110902":{"u":6,"m":0},"2155830":{"u":1,"m":1},"2173393":{"u":120,"m":0},"2188045":{"u":4,"m":0},"2188058":{"u":4,"m":0},"2189819":{"u":6,"m":0},"2198380":{"u":72,"m":0},"2223453":{"u":72,"m":0},"2270449":{"u":200,"m":0},"2285393":{"u":295,"m":0},"2354359":{"u":72,"m":1},"2365725":{"u":6,"m":0},"2391201":{"u":1,"m":0},"2399330":{"u":500,"m":0},"2410377":{"u":384,"m":0},"2435907":{"u":6,"m":1},"2463164":{"u":1,"m":0},"2525624":{"u":100,"m":1},"2528636":{"u":12,"m":0},"2604603":{"u":12,"m":0},"2611739":{"u":2,"m":0},"2683098":{"u":64,"m":1},"2683110":{"u":64,"m":1},"2746405":{"u":1,"m":1},"2880189":{"u":80,"m":1},"2972828":{"u":126,"m":1},"2972895":{"u":18,"m":0},"2975203":{"u":48,"m":0},"2999751":{"u":10,"m":0},"2999768":{"u":10,"m":1},"2999771":{"u":10,"m":1},"3143429":{"u":72,"m":0},"3144232":{"u":72,"m":1},"3162569":{"u":168,"m":1},"3282809":{"u":72,"m":1},"3363365":{"u":168,"m":0},"3532975":{"u":1,"m":1},"3560143":{"u":6,"m":0},"3593111":{"u":2,"m":0},"3593409":{"u":2,"m":0},"3624390":{"u":2,"m":0},"3627175":{"u":8,"m":0},"3716578":{"u":60,"m":0},"3718210":{"u":200,"m":0},"3724614":{"u":60,"m":0},"3727526":{"u":200,"m":0},"3747132":{"u":12,"m":0},"3939380":{"u":1,"m":0},"4003190":{"u":6,"m":0},"4010476":{"u":12,"m":1},"4025096":{"u":2,"m":1},"4025682":{"u":4,"m":1},"4030664":{"u":6,"m":0},"4032991":{"u":24,"m":0},"4040382":{"u":12,"m":0},"4040895":{"u":6,"m":1},"4044640":{"u":96,"m":0},"4045415":{"u":4,"m":0},"4066353":{"u":6,"m":0},"4073847":{"u":8,"m":0},"4106498":{"u":1,"m":0},"4161475":{"u":72,"m":0},"4212595":{"u":6,"m":0},"4260523":{"u":48,"m":1},"4313920":{"u":6,"m":0},"4342812":{"u":6,"m":0},"4383768":{"u":72,"m":1},"4384214":{"u":168,"m":0},"4394417":{"u":500,"m":0},"4402436":{"u":8,"m":0},"4407233":{"u":12,"m":0},"4407427":{"u":144,"m":1},"4533535":{"u":200,"m":0},"4560850":{"u":60,"m":0},"4563383":{"u":6,"m":1},"4583290":{"u":6,"m":0},"4614830":{"u":1,"m":0},"4705257":{"u":1,"m":0},"4710093":{"u":144,"m":0},"4812046":{"u":6,"m":0},"4827832":{"u":6,"m":0},"4897641":{"u":6,"m":0},"4987343":{"u":6,"m":0},"5044995":{"u":12,"m":1},"5102660":{"u":6,"m":1},"5108253":{"u":1,"m":0},"5152932":{"u":24,"m":1},"5152966":{"u":24,"m":1},"5174735":{"u":125,"m":0},"5181904":{"u":3,"m":0},"5211552":{"u":6,"m":0},"5224989":{"u":2,"m":0},"5226091":{"u":2,"m":0},"5228630":{"u":6,"m":0},"5229026":{"u":6,"m":0},"5229109":{"u":1,"m":0},"5229125":{"u":6,"m":0},"5229224":{"u":6,"m":0},"5258272":{"u":2,"m":0},"5274891":{"u":168,"m":0},"5275399":{"u":6,"m":1},"5487594":{"u":4,"m":0},"5590948":{"u":4,"m":0},"5854377":{"u":50,"m":0},"5856018":{"u":4,"m":1},"5913454":{"u":3,"m":0},"5913504":{"u":6,"m":0},"5920855":{"u":2,"m":0},"5946629":{"u":96,"m":1},"6011308":{"u":44,"m":0},"6040760":{"u":12,"m":0},"6055800":{"u":96,"m":1},"6098317":{"u":2,"m":1},"6198768":{"u":6,"m":0},"6204640":{"u":24,"m":1},"6233441":{"u":6,"m":0},"6320545":{"u":96,"m":0},"6341384":{"u":6,"m":0},"6404743":{"u":4,"m":1},"6418493":{"u":12,"m":0},"6469217":{"u":6,"m":0},"6626774":{"u":72,"m":1},"6631305":{"u":6,"m":0},"6639165":{"u":1,"m":0},"6697890":{"u":4,"m":0},"6715957":{"u":6,"m":0},"6902340":{"u":1,"m":0},"6938377":{"u":1,"m":0},"7000927":{"u":140,"m":0},"7000990":{"u":1,"m":1},"7001014":{"u":48,"m":0},"7014347":{"u":2,"m":0},"7018135":{"u":8,"m":0},"7027515":{"u":6,"m":1},"7028113":{"u":4,"m":0},"7028513":{"u":2,"m":0},"7028520":{"u":4,"m":0},"7031084":{"u":2,"m":0},"7032893":{"u":6,"m":0},"7038397":{"u":6,"m":0},"7040034":{"u":2,"m":0},"7048836":{"u":4,"m":0},"7063259":{"u":1,"m":0},"7063361":{"u":168,"m":0},"7072182":{"u":60,"m":0},"7094442":{"u":6,"m":0},"7114141":{"u":24,"m":0},"7114148":{"u":24,"m":0},"7142310":{"u":72,"m":1},"7147450":{"u":6,"m":0},"7150133":{"u":72,"m":1},"7156688":{"u":6,"m":0},"7191498":{"u":300,"m":1},"7202759":{"u":80,"m":1},"7214355":{"u":6,"m":0},"7227725":{"u":168,"m":0},"7228214":{"u":60,"m":0},"7256021":{"u":8,"m":0},"7256809":{"u":4,"m":0},"7256898":{"u":8,"m":0},"7274886":{"u":6,"m":0},"7279632":{"u":1,"m":0},"7279721":{"u":1,"m":1},"7311734":{"u":6,"m":1},"7313495":{"u":1,"m":1},"7336158":{"u":96,"m":0},"7336169":{"u":60,"m":0},"7346071":{"u":8,"m":1},"7346481":{"u":100,"m":0},"7377238":{"u":6,"m":1},"7379313":{"u":156,"m":1},"7391234":{"u":72,"m":1},"7401141":{"u":12,"m":0},"7411386":{"u":1,"m":1},"7431230":{"u":72,"m":1},"7449051":{"u":2,"m":1},"7663113":{"u":1000,"m":0},"7702261":{"u":2,"m":1},"7925787":{"u":107,"m":1},"7977509":{"u":150,"m":0},"8239446":{"u":4,"m":0},"8610051":{"u":48,"m":1},"8653952":{"u":48,"m":1},"8713350":{"u":8,"m":0},"8737433":{"u":2,"m":0},"8824336":{"u":72,"m":0},"9442088":{"u":44,"m":0},"9806415":{"u":6,"m":0},"9806423":{"u":1,"m":0},"9806449":{"u":6,"m":0},"9806472":{"u":6,"m":0},"9980186":{"u":2,"m":0},"0075048":{"u":6,"m":1},"0075079":{"u":6,"m":0},"0079634":{"u":6,"m":1},"0496026":{"u":1,"m":0},"0795086":{"u":12,"m":0},"0668873":{"u":1,"m":0},"0557074":{"u":4,"m":1},"0041620":{"u":6,"m":1},"0013553":{"u":6,"m":0},"0807996":{"u":200,"m":0},"0748762":{"u":6,"m":0},"002175":{"u":60,"m":1},"001997":{"u":96,"m":1},"001987":{"u":96,"m":1},"001977":{"u":96,"m":1},"001982":{"u":96,"m":1},"001543":{"u":48,"m":1},"001540":{"u":48,"m":1},"001996":{"u":96,"m":1},"0556076":{"u":4,"m":0},"0352074":{"u":12,"m":0},"001995":{"u":24,"m":0}},"locs":["PANTRY","WALK IN COOLER","FREEZER #1","FREEZER #2","COOKS TABLE","SERVICE TABLE #1","SERVICE TABLE #2","CHEMICAL STORAGE ROOM","BREAKFAST STORAGE ROOM","ICE CREAM FREEZER","DRINK DISPLAY COOLER","Milk Coolers","NOT STOCKED"],"stable":["4003190","6040760","9806472","5228630","6639165","4827832","5229026","5229109","5229125","5229224","1917899","9806415","5913504","7401141","4045415","6938377"]};
+<script>var SEED={"places":{"4752":"Milk Coolers","6926":"Milk Coolers","10120":"WALK IN COOLER","10126":"WALK IN COOLER","10187":"WALK IN COOLER","10197":"NOT STOCKED","10315":"WALK IN COOLER","10338":"WALK IN COOLER","10511":"WALK IN COOLER","10517":"NOT STOCKED","10642":"PANTRY","10751":"NOT STOCKED","10922":"WALK IN COOLER","10962":"WALK IN COOLER","11011":"WALK IN COOLER","11026":"WALK IN COOLER","11034":"WALK IN COOLER","11073":"NOT STOCKED","11100":"NOT STOCKED","11110":"NOT STOCKED","11406":"WALK IN COOLER","11483":"WALK IN COOLER","11495":"WALK IN COOLER","12266":"NOT STOCKED","12385":"WALK IN COOLER","20800":"NOT STOCKED","20837":"WALK IN COOLER","21036":"PANTRY","21449":"WALK IN COOLER","21600":"WALK IN COOLER","21905":"WALK IN COOLER","23025":"NOT STOCKED","30130":"WALK IN COOLER","30234":"WALK IN COOLER","30257":"WALK IN COOLER","30340":"WALK IN COOLER","30400":"NOT STOCKED","30405":"WALK IN COOLER","31321":"DRINK DISPLAY COOLER","33119":"WALK IN COOLER","51535":"WALK IN COOLER","53460":"WALK IN COOLER","100018":"NOT STOCKED","100206":"NOT STOCKED","100212":"PANTRY","100219":"PANTRY","100225":"PANTRY","100256":"FREEZER #2","100293":"NOT STOCKED","100364":"NOT STOCKED","110361":"NOT STOCKED","110396":"NOT STOCKED","110541":"NOT STOCKED","110859":"FREEZER #2","110860":"FREEZER #1","1000290":"WALK IN COOLER","1000511":"WALK IN COOLER","1000673":"WALK IN COOLER","1001529":"WALK IN COOLER","1001899":"WALK IN COOLER","1008093":"WALK IN COOLER","1024421":"FREEZER #2","1038421":"FREEZER #2","1053826":"FREEZER #2","1146911":"SERVICE TABLE #2","1166156":"PANTRY","1177955":"FREEZER #1","1218387":"PANTRY","1333434":"PANTRY","1339534":"FREEZER #1","1368598":"PANTRY","1400482":"BREAKFAST STORAGE ROOM","1412659":"FREEZER #2","1435197":"FREEZER #2","1436171":"NOT STOCKED","1605617":"DRINK DISPLAY COOLER","1606490":"NOT STOCKED","1608734":"PANTRY","1837461":"FREEZER #1","1841651":"FREEZER #1","1877034":"FREEZER #2","1898651":"PANTRY","1898677":"PANTRY","1898891":"PANTRY","1898935":"NOT STOCKED","1899063":"BREAKFAST STORAGE ROOM","1899077":"BREAKFAST STORAGE ROOM","1899085":"NOT STOCKED","1913047":"NOT STOCKED","1913066":"BREAKFAST STORAGE ROOM","1917899":"COOKS TABLE","1924697":"PANTRY","2030852":"FREEZER #1","2093213":"NOT STOCKED","2093650":"FREEZER #2","2093682":"FREEZER #2","2098071":"FREEZER #2","2098269":"BREAKFAST STORAGE ROOM","2099341":"CHEMICAL STORAGE ROOM","2110902":"PANTRY","2155830":"FREEZER #1","2173090":"FREEZER #1","2173379":"FREEZER #2","2173393":"FREEZER #1","2188045":"FREEZER #1","2188058":"FREEZER #1","2189819":"NOT STOCKED","2198380":"FREEZER #2","2223453":"WALK IN COOLER","2270449":"PANTRY","2285393":"FREEZER #1","2310036":"BREAKFAST STORAGE ROOM","2354346":"FREEZER #2","2354359":"FREEZER #2","2355586":"FREEZER #2","2355590":"FREEZER #2","2365725":"FREEZER #1","2391201":"FREEZER #1","2399330":"FREEZER #1","2410377":"FREEZER #1","2429007":"NOT STOCKED","2435907":"PANTRY","2463164":"WALK IN COOLER","2476754":"WALK IN COOLER","2525624":"FREEZER #1","2528636":"WALK IN COOLER","2604603":"NOT STOCKED","2611739":"PANTRY","2683098":"PANTRY","2683110":"PANTRY","2683123":"NOT STOCKED","2746405":"FREEZER #1","2880189":"PANTRY","2950725":"BREAKFAST STORAGE ROOM","2972828":"FREEZER #2","2972895":"WALK IN COOLER","2975203":"FREEZER #2","2981429":"NOT STOCKED","2999751":"SERVICE TABLE #1","2999768":"SERVICE TABLE #1","2999771":"SERVICE TABLE #1","3143429":"FREEZER #2","3144232":"FREEZER #2","3162569":"PANTRY","3189356":"BREAKFAST STORAGE ROOM","3268871":"PANTRY","3282809":"FREEZER #2","3290394":"BREAKFAST STORAGE ROOM","3295031":"NOT STOCKED","3363365":"PANTRY","3373931":"NOT STOCKED","3441407":"NOT STOCKED","3532975":"FREEZER #2","3533486":"FREEZER #2","3560143":"PANTRY","3593111":"PANTRY","3593409":"PANTRY","3624390":"PANTRY","3627175":"PANTRY","3716578":"SERVICE TABLE #2","3718210":"SERVICE TABLE #2","3724614":"SERVICE TABLE #2","3727526":"SERVICE TABLE #2","3747132":"NOT STOCKED","3831153":"FREEZER #2","3931221":"BREAKFAST STORAGE ROOM","3939380":"PANTRY","4003190":"COOKS TABLE","4010476":"PANTRY","4025682":"CHEMICAL STORAGE ROOM","4030664":"PANTRY","4032991":"PANTRY","4040382":"NOT STOCKED","4040895":"SERVICE TABLE #1","4044640":"NOT STOCKED","4045415":"SERVICE TABLE #1","4066353":"PANTRY","4073847":"PANTRY","4087508":"COOKS TABLE","4099313":"BREAKFAST STORAGE ROOM","4106498":"NOT STOCKED","4146510":"BREAKFAST STORAGE ROOM","4161475":"BREAKFAST STORAGE ROOM","4212595":"NOT STOCKED","4235693":"FREEZER #2","4260523":"FREEZER #2","4295360":"BREAKFAST STORAGE ROOM","4313920":"FREEZER #1","4342812":"PANTRY","4358974":"NOT STOCKED","4358990":"SERVICE TABLE #2","4360776":"PANTRY","4383768":"PANTRY","4384214":"WALK IN COOLER","4394417":"SERVICE TABLE #2","4402436":"PANTRY","4407233":"FREEZER #2","4407427":"PANTRY","4434140":"NOT STOCKED","4526366":"FREEZER #1","4533535":"SERVICE TABLE #2","4560850":"NOT STOCKED","4563383":"PANTRY","4583290":"COOKS TABLE","4614830":"NOT STOCKED","4673687":"NOT STOCKED","4676437":"BREAKFAST STORAGE ROOM","4679009":"WALK IN COOLER","4705257":"WALK IN COOLER","4710093":"FREEZER #1","4812046":"NOT STOCKED","4827832":"COOKS TABLE","4897641":"WALK IN COOLER","4933933":"PANTRY","4987343":"PANTRY","4995726":"FREEZER #2","5044995":"PANTRY","5073130":"PANTRY","5076627":"NOT STOCKED","5096413":"SERVICE TABLE #2","5096431":"SERVICE TABLE #2","5102660":"PANTRY","5108253":"PANTRY","5135136":"NOT STOCKED","5152932":"DRINK DISPLAY COOLER","5152966":"DRINK DISPLAY COOLER","5174735":"SERVICE TABLE #1","5181904":"CHEMICAL STORAGE ROOM","5211552":"PANTRY","5224989":"FREEZER #1","5226091":"CHEMICAL STORAGE ROOM","5228630":"COOKS TABLE","5229026":"COOKS TABLE","5229109":"COOKS TABLE","5229125":"COOKS TABLE","5229224":"COOKS TABLE","5258272":"NOT STOCKED","5264320":"NOT STOCKED","5274891":"WALK IN COOLER","5275399":"FREEZER #1","5278718":"NOT STOCKED","5321906":"WALK IN COOLER","5397734":"FREEZER #2","5487594":"CHEMICAL STORAGE ROOM","5556669":"FREEZER #1","5560271":"PANTRY","5590948":"PANTRY","5713991":"FREEZER #2","5725765":"NOT STOCKED","5773007":"FREEZER #2","5854377":"SERVICE TABLE #2","5856018":"PANTRY","5889407":"BREAKFAST STORAGE ROOM","5913454":"COOKS TABLE","5913504":"COOKS TABLE","5920855":"PANTRY","5946629":"PANTRY","6011308":"PANTRY","6040760":"COOKS TABLE","6055800":"BREAKFAST STORAGE ROOM","6098317":"PANTRY","6198768":"FREEZER #1","6204640":"DRINK DISPLAY COOLER","6233441":"PANTRY","6290435":"BREAKFAST STORAGE ROOM","6320545":"NOT STOCKED","6321299":"NOT STOCKED","6341384":"NOT STOCKED","6404743":"PANTRY","6469217":"PANTRY","6599405":"BREAKFAST STORAGE ROOM","6626774":"PANTRY","6631305":"WALK IN COOLER","6639165":"COOKS TABLE","6697890":"WALK IN COOLER","6715957":"PANTRY","6725313":"NOT STOCKED","6725335":"NOT STOCKED","6743086":"PANTRY","6817399":"BREAKFAST STORAGE ROOM","6902340":"WALK IN COOLER","6937734":"PANTRY","6938377":"COOKS TABLE","7000867":"FREEZER #2","7000927":"PANTRY","7000990":"FREEZER #1","7001014":"NOT STOCKED","7012485":"PANTRY","7014347":"FREEZER #1","7018135":"WALK IN COOLER","7024298":"BREAKFAST STORAGE ROOM","7027515":"FREEZER #1","7028113":"COOKS TABLE","7028513":"CHEMICAL STORAGE ROOM","7028520":"CHEMICAL STORAGE ROOM","7031084":"WALK IN COOLER","7032893":"FREEZER #1","7038397":"PANTRY","7040034":"PANTRY","7041945":"FREEZER #2","7048836":"WALK IN COOLER","7063259":"WALK IN COOLER","7063361":"WALK IN COOLER","7072170":"BREAKFAST STORAGE ROOM","7072180":"NOT STOCKED","7072182":"BREAKFAST STORAGE ROOM","7072203":"NOT STOCKED","7094442":"FREEZER #1","7095624":"PANTRY","7096459":"SERVICE TABLE #2","7111727":"NOT STOCKED","7114141":"SERVICE TABLE #1","7114148":"SERVICE TABLE #1","7116960":"BREAKFAST STORAGE ROOM","7118402":"PANTRY","7142310":"FREEZER #2","7143888":"NOT STOCKED","7147450":"PANTRY","7150133":"FREEZER #1","7156688":"NOT STOCKED","7164495":"FREEZER #2","7180144":"PANTRY","7190735":"NOT STOCKED","7191498":"FREEZER #1","7199075":"BREAKFAST STORAGE ROOM","7199076":"BREAKFAST STORAGE ROOM","7200068":"PANTRY","7202759":"PANTRY","7214355":"FREEZER #1","7227725":"WALK IN COOLER","7228214":"BREAKFAST STORAGE ROOM","7256021":"WALK IN COOLER","7256809":"WALK IN COOLER","7256898":"WALK IN COOLER","7274886":"WALK IN COOLER","7279628":"NOT STOCKED","7279632":"SERVICE TABLE #2","7279721":"SERVICE TABLE #2","7311734":"FREEZER #1","7313495":"FREEZER #1","7336158":"NOT STOCKED","7336169":"BREAKFAST STORAGE ROOM","7346071":"PANTRY","7346481":"PANTRY","7353887":"NOT STOCKED","7358764":"PANTRY","7360691":"NOT STOCKED","7377238":"FREEZER #1","7379313":"FREEZER #1","7391234":"PANTRY","7401141":"COOKS TABLE","7431230":"FREEZER #2","7431244":"FREEZER #2","7449051":"PANTRY","7663113":"COOKS TABLE","7700812":"NOT STOCKED","7702261":"PANTRY","7728403":"FREEZER #2","7733464":"FREEZER #2","7762329":"NOT STOCKED","7794656":"BREAKFAST STORAGE ROOM","7826286":"FREEZER #1","7861931":"SERVICE TABLE #2","7863540":"SERVICE TABLE #2","7925787":"FREEZER #1","7977509":"CHEMICAL STORAGE ROOM","8026122":"NOT STOCKED","8108847":"NOT STOCKED","8162673":"FREEZER #2","8239446":"PANTRY","8265191":"BREAKFAST STORAGE ROOM","8266157":"BREAKFAST STORAGE ROOM","8344303":"BREAKFAST STORAGE ROOM","8610051":"FREEZER #2","8653952":"WALK IN COOLER","8713350":"FREEZER #1","8737433":"PANTRY","8775318":"BREAKFAST STORAGE ROOM","8845168":"FREEZER #2","8880047":"NOT STOCKED","9237835":"NOT STOCKED","9387317":"BREAKFAST STORAGE ROOM","9442088":"NOT STOCKED","9688367":"NOT STOCKED","9806415":"COOKS TABLE","9806423":"COOKS TABLE","9806449":"NOT STOCKED","9806472":"COOKS TABLE","9901031":"NOT STOCKED","9902666":"SERVICE TABLE #2","9980186":"COOKS TABLE","0668873":"WALK IN COOLER","0557074":"WALK IN COOLER","0556076":"WALK IN COOLER","0090811":"FREEZER #1","0533485":"FREEZER #1","0041620":"FREEZER #1","0013553":"FREEZER #1","0139610":"FREEZER #2","0397087":"FREEZER #2","0807996":"FREEZER #1","0079634":"PANTRY","0075048":"PANTRY","0075079":"PANTRY","0445062":"PANTRY","0496026":"PANTRY","0795086":"PANTRY","0352074":"PANTRY","001543":"ICE CREAM FREEZER","002175":"ICE CREAM FREEZER","001997":"ICE CREAM FREEZER","001995":"ICE CREAM FREEZER","001982":"ICE CREAM FREEZER","001996":"ICE CREAM FREEZER","0748762":"FREEZER #1","001987":"ICE CREAM FREEZER","001540":"ICE CREAM FREEZER","001977":"ICE CREAM FREEZER","0444598":"BREAKFAST STORAGE ROOM","0445088":"PANTRY","CUST-4752":"Milk Coolers","CUST-6926":"Milk Coolers"},"units":{"4752":{"u":50,"m":1},"6926":{"u":50,"m":1},"10120":{"u":4,"m":0},"10126":{"u":6,"m":0},"10187":{"u":12,"m":0},"10315":{"u":14,"m":0},"10511":{"u":6,"m":0},"10517":{"u":1,"m":0},"10751":{"u":1,"m":0},"11011":{"u":4,"m":0},"11026":{"u":4,"m":0},"11034":{"u":1,"m":0},"11483":{"u":1,"m":0},"11495":{"u":1,"m":1},"12385":{"u":1,"m":1},"21036":{"u":2,"m":0},"21600":{"u":1,"m":0},"21905":{"u":1,"m":1},"30130":{"u":4,"m":0},"30257":{"u":4,"m":1},"30340":{"u":4,"m":0},"30400":{"u":4,"m":0},"30405":{"u":4,"m":0},"31321":{"u":24,"m":1},"33119":{"u":1,"m":1},"53460":{"u":1,"m":1},"100018":{"u":6,"m":0},"100206":{"u":1,"m":0},"100212":{"u":1,"m":1},"100219":{"u":1,"m":1},"100293":{"u":1,"m":0},"100364":{"u":6,"m":0},"110361":{"u":1,"m":0},"110396":{"u":1,"m":0},"1000290":{"u":4,"m":0},"1000673":{"u":4,"m":0},"1001529":{"u":4,"m":1},"1008093":{"u":1,"m":0},"1024421":{"u":1,"m":1},"1053826":{"u":12,"m":0},"1146911":{"u":1000,"m":0},"1177955":{"u":2,"m":1},"1218387":{"u":6,"m":0},"1339534":{"u":12,"m":0},"1436171":{"u":70,"m":0},"1605617":{"u":24,"m":1},"1606490":{"u":24,"m":1},"1608734":{"u":6,"m":0},"1837461":{"u":4,"m":0},"1841651":{"u":250,"m":0},"1898651":{"u":96,"m":0},"1898677":{"u":96,"m":0},"1898891":{"u":96,"m":1},"1913047":{"u":96,"m":0},"1913066":{"u":96,"m":1},"1917899":{"u":6,"m":0},"1924697":{"u":104,"m":1},"2030852":{"u":5,"m":0},"2098071":{"u":72,"m":0},"2110902":{"u":6,"m":0},"2155830":{"u":1,"m":1},"2173393":{"u":120,"m":0},"2188045":{"u":4,"m":0},"2188058":{"u":4,"m":0},"2189819":{"u":6,"m":0},"2198380":{"u":72,"m":0},"2223453":{"u":72,"m":0},"2270449":{"u":200,"m":0},"2285393":{"u":295,"m":0},"2354359":{"u":72,"m":1},"2365725":{"u":6,"m":0},"2391201":{"u":1,"m":0},"2399330":{"u":500,"m":0},"2410377":{"u":384,"m":0},"2435907":{"u":6,"m":1},"2463164":{"u":1,"m":0},"2525624":{"u":100,"m":1},"2528636":{"u":12,"m":0},"2604603":{"u":12,"m":0},"2611739":{"u":2,"m":0},"2683098":{"u":64,"m":1},"2683110":{"u":64,"m":1},"2746405":{"u":1,"m":1},"2880189":{"u":80,"m":1},"2972828":{"u":126,"m":1},"2972895":{"u":18,"m":0},"2975203":{"u":48,"m":0},"2999751":{"u":10,"m":0},"2999768":{"u":10,"m":1},"2999771":{"u":10,"m":1},"3143429":{"u":72,"m":0},"3144232":{"u":72,"m":1},"3162569":{"u":168,"m":1},"3282809":{"u":72,"m":1},"3363365":{"u":168,"m":0},"3532975":{"u":1,"m":1},"3560143":{"u":6,"m":0},"3593111":{"u":2,"m":0},"3593409":{"u":2,"m":0},"3624390":{"u":2,"m":0},"3627175":{"u":8,"m":0},"3716578":{"u":60,"m":0},"3718210":{"u":200,"m":0},"3724614":{"u":60,"m":0},"3727526":{"u":200,"m":0},"3747132":{"u":12,"m":0},"3939380":{"u":1,"m":0},"4003190":{"u":6,"m":0},"4010476":{"u":12,"m":1},"4025096":{"u":2,"m":1},"4025682":{"u":4,"m":1},"4030664":{"u":6,"m":0},"4032991":{"u":24,"m":0},"4040382":{"u":12,"m":0},"4040895":{"u":6,"m":1},"4044640":{"u":96,"m":0},"4045415":{"u":4,"m":0},"4066353":{"u":6,"m":0},"4073847":{"u":8,"m":0},"4106498":{"u":1,"m":0},"4161475":{"u":72,"m":0},"4212595":{"u":6,"m":0},"4260523":{"u":48,"m":1},"4313920":{"u":6,"m":0},"4342812":{"u":6,"m":0},"4383768":{"u":72,"m":1},"4384214":{"u":168,"m":0},"4394417":{"u":500,"m":0},"4402436":{"u":8,"m":0},"4407233":{"u":12,"m":0},"4407427":{"u":144,"m":1},"4533535":{"u":200,"m":0},"4560850":{"u":60,"m":0},"4563383":{"u":6,"m":1},"4583290":{"u":6,"m":0},"4614830":{"u":1,"m":0},"4705257":{"u":1,"m":0},"4710093":{"u":144,"m":0},"4812046":{"u":6,"m":0},"4827832":{"u":6,"m":0},"4897641":{"u":6,"m":0},"4987343":{"u":6,"m":0},"5044995":{"u":12,"m":1},"5102660":{"u":6,"m":1},"5108253":{"u":1,"m":0},"5152932":{"u":24,"m":1},"5152966":{"u":24,"m":1},"5174735":{"u":125,"m":0},"5181904":{"u":3,"m":0},"5211552":{"u":6,"m":0},"5224989":{"u":2,"m":0},"5226091":{"u":2,"m":0},"5228630":{"u":6,"m":0},"5229026":{"u":6,"m":0},"5229109":{"u":1,"m":0},"5229125":{"u":6,"m":0},"5229224":{"u":6,"m":0},"5258272":{"u":2,"m":0},"5274891":{"u":168,"m":0},"5275399":{"u":6,"m":1},"5487594":{"u":4,"m":0},"5590948":{"u":4,"m":0},"5854377":{"u":50,"m":0},"5856018":{"u":4,"m":1},"5913454":{"u":3,"m":0},"5913504":{"u":6,"m":0},"5920855":{"u":2,"m":0},"5946629":{"u":96,"m":1},"6011308":{"u":44,"m":0},"6040760":{"u":12,"m":0},"6055800":{"u":96,"m":1},"6098317":{"u":2,"m":1},"6198768":{"u":6,"m":0},"6204640":{"u":24,"m":1},"6233441":{"u":6,"m":0},"6320545":{"u":96,"m":0},"6341384":{"u":6,"m":0},"6404743":{"u":4,"m":1},"6418493":{"u":12,"m":0},"6469217":{"u":6,"m":0},"6626774":{"u":72,"m":1},"6631305":{"u":6,"m":0},"6639165":{"u":1,"m":0},"6697890":{"u":4,"m":0},"6715957":{"u":6,"m":0},"6902340":{"u":1,"m":0},"6938377":{"u":1,"m":0},"7000927":{"u":140,"m":0},"7000990":{"u":1,"m":1},"7001014":{"u":48,"m":0},"7014347":{"u":2,"m":0},"7018135":{"u":8,"m":0},"7027515":{"u":6,"m":1},"7028113":{"u":4,"m":0},"7028513":{"u":2,"m":0},"7028520":{"u":4,"m":0},"7031084":{"u":2,"m":0},"7032893":{"u":6,"m":0},"7038397":{"u":6,"m":0},"7040034":{"u":2,"m":0},"7048836":{"u":4,"m":0},"7063259":{"u":1,"m":0},"7063361":{"u":168,"m":0},"7072182":{"u":60,"m":0},"7094442":{"u":6,"m":0},"7114141":{"u":24,"m":0},"7114148":{"u":24,"m":0},"7142310":{"u":72,"m":1},"7147450":{"u":6,"m":0},"7150133":{"u":72,"m":1},"7156688":{"u":6,"m":0},"7191498":{"u":300,"m":1},"7202759":{"u":80,"m":1},"7214355":{"u":6,"m":0},"7227725":{"u":168,"m":0},"7228214":{"u":60,"m":0},"7256021":{"u":8,"m":0},"7256809":{"u":4,"m":0},"7256898":{"u":8,"m":0},"7274886":{"u":6,"m":0},"7279632":{"u":1,"m":0},"7279721":{"u":1,"m":1},"7311734":{"u":6,"m":1},"7313495":{"u":1,"m":1},"7336158":{"u":96,"m":0},"7336169":{"u":60,"m":0},"7346071":{"u":8,"m":1},"7346481":{"u":100,"m":0},"7377238":{"u":6,"m":1},"7379313":{"u":156,"m":1},"7391234":{"u":72,"m":1},"7401141":{"u":12,"m":0},"7411386":{"u":1,"m":1},"7431230":{"u":72,"m":1},"7449051":{"u":2,"m":1},"7663113":{"u":1000,"m":0},"7702261":{"u":2,"m":1},"7925787":{"u":107,"m":1},"7977509":{"u":150,"m":0},"8239446":{"u":4,"m":0},"8610051":{"u":48,"m":1},"8653952":{"u":48,"m":1},"8713350":{"u":8,"m":0},"8737433":{"u":2,"m":0},"8824336":{"u":72,"m":0},"9442088":{"u":44,"m":0},"9806415":{"u":6,"m":0},"9806423":{"u":1,"m":0},"9806449":{"u":6,"m":0},"9806472":{"u":6,"m":0},"9980186":{"u":2,"m":0},"0075048":{"u":6,"m":1},"0075079":{"u":6,"m":0},"0079634":{"u":6,"m":1},"0496026":{"u":1,"m":0},"0795086":{"u":12,"m":0},"0668873":{"u":1,"m":0},"0557074":{"u":4,"m":1},"0041620":{"u":6,"m":1},"0013553":{"u":6,"m":0},"0807996":{"u":200,"m":0},"0748762":{"u":6,"m":0},"002175":{"u":60,"m":1},"001997":{"u":96,"m":1},"001987":{"u":96,"m":1},"001977":{"u":96,"m":1},"001982":{"u":96,"m":1},"001543":{"u":48,"m":1},"001540":{"u":48,"m":1},"001996":{"u":96,"m":1},"0556076":{"u":4,"m":0},"0352074":{"u":12,"m":0},"001995":{"u":24,"m":0}},"locs":["PANTRY","WALK IN COOLER","FREEZER #1","FREEZER #2","COOKS TABLE","SERVICE TABLE #1","SERVICE TABLE #2","CHEMICAL STORAGE ROOM","BREAKFAST STORAGE ROOM","ICE CREAM FREEZER","DRINK DISPLAY COOLER","Milk Coolers","NOT STOCKED"],"stable":["4003190","6040760","9806472","5228630","6639165","4827832","5229026","5229109","5229125","5229224","1917899","9806415","5913504","7401141","4045415","6938377"],"codes":{"Commodity Apple Slices Can":"100206","Commodity Applesauce Canned":"110541","Commodity Ind. Box Raisins":"100293","Commodity Indian Summer Applesauce Cups":"110361","Commodity Mixed Fruit":"100212","Commodity Peaches Sliced":"100219","Commodity Pears Diced":"100225","Commodity Blueberry 30lb":"110624","Commodity Carrots":"100352","Commodity Corn":"100348","Commodity Frozen Mixed Berry Cups":"110859","Commodity Frozen Peach Cups":"100241","Commodity Frozen Strawberry Cups":"100256","Commodity Green Beans":"100351","Commodity Ham Diced (old A727)":"100188","Commodity Mixed Vegetables":"111230","Commodity Strawberry 30lb":"110860","1% White Milk":"4752","FF Chocolate Milk":"6926"}};
+</script>
+<script>/* ==========================================================================
+   Code 128 barcode, drawn as inline SVG.
+   Written out rather than pulled from a library so the file stays one
+   self-contained page that works with no network. Code 128 subset B covers
+   the full printable ASCII range, which is what Dist # values need — they are
+   not always pure digits ("0013553-NOI"), so the digit-pair subset C is not
+   safe here.
+   ========================================================================== */
+
+/* Bar/space widths for each of the 107 symbols, then the stop pattern. */
+var C128 = ("212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 " +
+  "221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 " +
+  "221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 " +
+  "212123 212321 232121 111323 131123 131321 112313 132113 132311 211313 " +
+  "231113 231311 112133 112331 132131 113123 113321 133121 313121 211331 " +
+  "231131 213113 213311 213131 311123 311321 331121 312113 312311 332111 " +
+  "314111 221411 431111 111224 111422 121124 121421 141122 141221 112214 " +
+  "112412 122114 122411 142112 142211 241211 221114 413111 241112 134111 " +
+  "111242 121142 121241 114212 124112 124211 411212 421112 421211 212141 " +
+  "214121 412121 111143 111341 131141 114113 114311 411113 411311 113141 " +
+  "114131 311141 411131 211412 211214 211232 2331112").split(" ");
+
+/* Renders value as an SVG string. Returns "" for anything unencodable rather
+   than drawing a barcode that will not scan. */
+function barcodeSVG(value, opts){
+  opts = opts || {};
+  var text = String(value == null ? "" : value).trim();
+  if(!text) return "";
+
+  var h = opts.height || 34, unit = opts.unit || 1.1;
+
+  /* Subset B: character value is charCode - 32, valid for 32..126. */
+  var codes = [104], i, c;   /* 104 = START B */
+  for(i = 0; i < text.length; i++){
+    c = text.charCodeAt(i);
+    if(c < 32 || c > 126) return "";
+    codes.push(c - 32);
+  }
+  var sum = 104;
+  for(i = 1; i < codes.length; i++) sum += codes[i] * i;
+  codes.push(sum % 103);     /* check symbol */
+  codes.push(106);           /* STOP */
+
+  var bars = [], x = 0, pat, j, w, dark;
+  for(i = 0; i < codes.length; i++){
+    pat = C128[codes[i]];
+    if(!pat) return "";
+    dark = true;
+    for(j = 0; j < pat.length; j++){
+      w = parseInt(pat.charAt(j), 10) * unit;
+      if(dark) bars.push('<rect x="' + x.toFixed(2) + '" y="0" width="' + w.toFixed(2) +
+                         '" height="' + h + '"/>');
+      x += w;
+      dark = !dark;
+    }
+  }
+
+  return '<svg class="bc" viewBox="0 0 ' + x.toFixed(2) + ' ' + h + '" ' +
+         'width="' + Math.round(x) + '" height="' + h + '" ' +
+         'preserveAspectRatio="xMinYMid meet" xmlns="http://www.w3.org/2000/svg">' +
+         '<g fill="#000">' + bars.join("") + '</g></svg>';
+}
 </script>
 <script>/* ==========================================================================
    Inventory Walk — hybrid
@@ -350,7 +473,10 @@ var K = {
   units: "wih_v1_units",
   locs:  "wih_v1_locs",
   meta:  "wih_v1_meta",
-  rows:  "wih_v1_rows"
+  rows:  "wih_v1_rows",
+  last:  "wih_v1_lastroster",
+  codes: "wih_v1_codes",
+  site:  "wih_v1_site"
 };
 
 var S = {
@@ -359,11 +485,15 @@ var S = {
   items: [],
   place: {},     /* vendor  -> location        */
   units: {},     /* vendor  -> {u:number,m:0|1} */
+  codes: {},     /* description -> scan code, for items with no Dist # */
+  site:  null,   /* {name, seeded} — which building this device is counting */
   db:    {},     /* key     -> {q, mode, loc, at, st} st: counted | zero | pending */
   locs:  [],
   loc:   null,
   sel:   null,
   onlyUn: false,
+  refocus: false,
+  scanJump: true,   /* jump straight to an item when a full code is typed */
   undo:  []
 };
 
@@ -565,10 +695,32 @@ function doImport(wb, sheetName, fileName){
   if(Object.keys(S.db).length){
     keep = confirm("You have counts in progress.\n\nOK — keep them and just refresh the item list.\nCancel — start a clean count.");
   }
+  /* Roster diff against the previous import. Compass adds items and almost
+     never drops them, so a removal is worth seeing. */
+  var prev = load(K.last, null);
+  var diff = null;
+  if(prev && prev.length){
+    var was = {}, now = {}, addedL = [], goneL = [];
+    prev.forEach(function(r){ was[r.v] = r.d; });
+    p.items.forEach(function(it){
+      var kk = it.vendor || ("~" + it.desc);
+      now[kk] = it.desc;
+      if(!(kk in was)) addedL.push(it);
+    });
+    Object.keys(was).forEach(function(kk){
+      if(!(kk in now)) goneL.push({vendor: kk, desc: was[kk]});
+    });
+    diff = {added: addedL, gone: goneL, prevCount: prev.length};
+  }
+
   S.rows  = rows;
   S.items = p.items;
   S.meta  = p.meta;
   if(!keep) S.db = {};
+
+  save(K.last, p.items.map(function(it){
+    return {v: it.vendor || ("~" + it.desc), d: it.desc};
+  }));
 
   /* Any location named in the map but missing from the list gets added, so an
      inherited placement never points at a location you cannot tap. */
@@ -584,7 +736,8 @@ function doImport(wb, sheetName, fileName){
   render();
 
   var placed = 0, unplaced = 0;
-  S.items.forEach(function(it){ if(S.place[it.vendor]) placed++; else unplaced++; });
+  S.items.forEach(function(it){ if(placeOf(it)) placed++; else unplaced++; });
+  var needClassMap = !!(S.site && !S.site.seeded) || (!placed && !S.locs.length);
   var packMissing = S.items.filter(function(it){ return !it.pack; }).length;
   openModal(
     '<h2>Imported</h2>' +
@@ -593,19 +746,196 @@ function doImport(wb, sheetName, fileName){
     'pack sizes: <b>' + (packMissing === p.items.length ? "not in this report" : "column " + (p.cols.pack + 1)) + '</b></div>' +
     '<table class="sum"><tr><td>Already placed</td><td class="n">' + placed + '</td></tr>' +
     '<tr><td>Need placing as you go</td><td class="n">' + unplaced + '</td></tr></table>' +
+    diffHtml(diff) +
     '<p class="hint">Pick a location up top and start counting. Anything you count lands in that location for good.</p>' +
-    '<button class="bigbtn" id="okImp">Start</button>',
-    function(root){ root.querySelector("#okImp").onclick = closeModal; }
+    '<button class="bigbtn" id="okImp">' +
+      (needClassMap ? "Set up my rooms" : "Start") + '</button>',
+    function(root){
+      root.querySelector("#okImp").onclick = function(){
+        closeModal();
+        if(needClassMap) openClassMap(null);
+      };
+    }
   );
+}
+
+/* ==========================================================================
+   STARTING A NEW KITCHEN FROM ITS OWN SPREADSHEET
+   The report already groups every item by classification. Those groups are not
+   rooms — "Paper Supplies" could be three different places — but the big ones
+   (Freezer, Cooler, Dry Storage) are a room each, and that is most of the
+   sheet. So: ask once which room each group lives in, then let counting
+   correct the rest the way it always does.
+   ========================================================================== */
+
+/* Sensible room name for a classification, where one is obvious. */
+function suggestRoom(cls){
+  var c = String(cls || "").toLowerCase();
+  if(/freezer/.test(c) && /ice\s*cream/.test(c)) return "Ice Cream Freezer";
+  if(/ice\s*cream/.test(c))  return "Ice Cream Freezer";
+  if(/freezer/.test(c))      return "Walk-in Freezer";
+  if(/cooler|refrig/.test(c))return "Walk-in Cooler";
+  if(/dry\s*storage|grocer/.test(c)) return "Dry Storage";
+  if(/milk/.test(c))         return "Milk Cooler";
+  if(/clean|chemical/.test(c)) return "Chemical Storage";
+  if(/paper|supply|supplies/.test(c)) return "Dry Storage";
+  if(/bread|bakery/.test(c)) return "Dry Storage";
+  if(/beverage|drink/.test(c)) return "A La Carte";
+  if(/condiment/.test(c))    return "Service";
+  return "";
+}
+
+function classGroups(){
+  var g = {}, order = [];
+  S.items.forEach(function(it){
+    var top = String(it.cls || "").split("->")[0].trim() || "(no group)";
+    if(!g[top]){ g[top] = []; order.push(top); }
+    g[top].push(it);
+  });
+  order.sort(function(a, b){ return g[b].length - g[a].length; });
+  return {groups: g, order: order};
+}
+
+function openClassMap(after){
+  var cg = classGroups();
+  /* Rooms offered: whatever exists, plus a suggestion per group, plus the
+     handful of rooms most kitchens have that no classification implies. */
+  var rooms = S.locs.slice();
+  function addRoom(r){ if(r && rooms.indexOf(r) < 0) rooms.push(r); }
+  cg.order.forEach(function(k){ addRoom(suggestRoom(k)); });
+  ["Kitchen", "Service", "Pass-thru Coolers", "A La Carte", "Dry Storage",
+   "Walk-in Freezer", "Walk-in Cooler", "Milk Cooler"].forEach(addRoom);
+
+  var html = '<h2>Where does each group live?</h2>' +
+    '<div class="hint">The report groups items like this already. Say which room each group is in and that is your starting map — ' +
+    'wrong guesses fix themselves the first time you count one of those items somewhere else. ' +
+    'You can add rooms later.</div>' +
+    '<div class="stack" style="margin-top:14px">';
+
+  cg.order.forEach(function(k, i){
+    var sug = suggestRoom(k);
+    var ex  = cg.groups[k].slice(0, 2).map(function(it){ return it.desc; }).join(", ");
+    html += '<div class="cap"><div class="d">' + esc(k) +
+      '<small>' + cg.groups[k].length + ' items · ' + esc(ex.slice(0, 54)) + '</small></div>' +
+      '<select class="cmsel" data-cls="' + esc(k) + '">' +
+        '<option value="">— leave unplaced —</option>' +
+        rooms.map(function(r){
+          return '<option value="' + esc(r) + '"' + (r === sug ? " selected" : "") + '>' + esc(r) + '</option>';
+        }).join("") +
+      '</select></div>';
+  });
+
+  html += '</div>' +
+    '<div class="row2" style="margin-top:12px"><button id="cmAddRoom">Add a room to the list</button></div>' +
+    '<button class="bigbtn" id="cmGo">Use this as my starting map</button>' +
+    '<button class="bigbtn ghost" id="cmSkip">Skip — start with nothing placed</button>';
+
+  openModal(html, function(root){
+    root.querySelector("#cmAddRoom").onclick = function(){
+      var n = prompt("Name of the room");
+      if(!n || !n.trim()) return;
+      n = n.trim();
+      /* Keep what is already chosen, then reopen with the new room offered. */
+      var chosen = {};
+      root.querySelectorAll(".cmsel").forEach(function(sel){ chosen[sel.dataset.cls] = sel.value; });
+      if(S.locs.indexOf(n) < 0){ S.locs.push(n); save(K.locs, S.locs); }
+      closeModal();
+      openClassMap(after);
+      setTimeout(function(){
+        document.querySelectorAll(".cmsel").forEach(function(sel){
+          if(chosen[sel.dataset.cls]) sel.value = chosen[sel.dataset.cls];
+        });
+      }, 30);
+    };
+
+    root.querySelector("#cmGo").onclick = function(){
+      var used = {}, n = 0;
+      root.querySelectorAll(".cmsel").forEach(function(sel){
+        var room = sel.value;
+        if(!room) return;
+        used[room] = 1;
+        (cg.groups[sel.dataset.cls] || []).forEach(function(it){
+          S.place[keyOf(it)] = room;
+          n++;
+        });
+      });
+      Object.keys(used).forEach(function(r){ if(S.locs.indexOf(r) < 0) S.locs.push(r); });
+      save(K.place, S.place); save(K.locs, S.locs);
+      if(S.site){ S.site.seeded = true; save(K.site, S.site); }
+      closeModal(); render();
+      openModal('<h2>Starting map built</h2>' +
+        '<div class="note good"><b>' + n + ' items</b> placed across ' +
+        Object.keys(used).length + ' rooms.</div>' +
+        '<div class="hint">Counting an item in a different room moves it there permanently, so this gets more accurate every walk.</div>' +
+        '<button class="bigbtn" id="okCm">Start</button>',
+        function(r2){ r2.querySelector("#okCm").onclick = function(){ closeModal(); if(after) after(); }; });
+    };
+
+    root.querySelector("#cmSkip").onclick = function(){
+      if(S.site){ S.site.seeded = true; save(K.site, S.site); }
+      closeModal(); render(); if(after) after();
+    };
+  });
 }
 
 /* ==========================================================================
    ITEM STATE
    ========================================================================== */
+/* What changed since the last export you loaded. */
+function diffHtml(diff){
+  if(!diff) return '<p class="hint">First import — nothing to compare against yet. Next week this will show what changed.</p>';
+  if(!diff.added.length && !diff.gone.length)
+    return '<div class="note good">Same ' + diff.prevCount + ' items as last time — nothing added or dropped.</div>';
+
+  var h = '<h3>Since the last export</h3>';
+  if(diff.added.length){
+    h += '<div class="note"><b>' + diff.added.length + ' new</b></div><div class="stack">';
+    diff.added.slice(0, 40).forEach(function(it){
+      h += '<div class="cap"><div class="d">' + esc(it.desc) +
+           '<small>' + esc(it.vendor || "no Dist #") + (it.pack ? " · " + esc(it.pack) : "") +
+           ' · ' + esc(it.cls || "") + '</small></div></div>';
+    });
+    if(diff.added.length > 40) h += '<div class="hint">…and ' + (diff.added.length - 40) + ' more.</div>';
+    h += '</div>';
+  }
+  if(diff.gone.length){
+    h += '<div class="note bad" style="margin-top:14px"><b>' + diff.gone.length +
+         ' gone</b> — dropped from the report. Their placements stay in case they come back.</div>' +
+         '<div class="stack">';
+    diff.gone.slice(0, 40).forEach(function(g){
+      h += '<div class="cap zero"><div class="d">' + esc(g.desc) +
+           '<small>' + esc(g.vendor) + '</small></div></div>';
+    });
+    if(diff.gone.length > 40) h += '<div class="hint">…and ' + (diff.gone.length - 40) + ' more.</div>';
+    h += '</div>';
+  }
+  return h;
+}
+
+/* What a scanner would read for this item. Usually the Dist #, but the
+   commodity items and the milks carry no Dist # on the report — their codes
+   come from the printed barcode sheet instead. */
+function scanCode(it){
+  if(it.vendor) return it.vendor;
+  return S.codes[it.desc] || "";
+}
+
 function rec(key){ return S.db[key] || null; }
-function placeOf(it){ return S.place[it.vendor] || ""; }
+/* The key a placement and a units-per-case setting hang off.
+   Normally the Dist #. The commodity items and the milks carry no Dist # on
+   the report, and an empty key would be SHARED by all of them — placing one
+   would drag the whole group into that room. Fall back to the scan code, then
+   to the description, so each of those items gets a slot of its own. */
+function keyOf(it){
+  if(it.vendor) return it.vendor;
+  var c = S.codes[it.desc];
+  if(c) return "c:" + c;
+  return "d:" + it.desc;
+}
+
+function placeOf(it){ return S.place[keyOf(it)] || ""; }
 function upc(it){
-  var u = S.units[it.vendor];
+  var u = S.units[keyOf(it)];
   if(u && u.u) return u.u;
   return it.packUnits || 0;
 }
@@ -667,7 +997,7 @@ function render(){
   $("pillwrap").classList.remove("hide");
   $("foot").classList.remove("hide");
 
-  $("barMeta").textContent = (S.meta.file || "") +
+  $("barMeta").textContent = (S.site ? S.site.name + " · " : "") + (S.meta.file || "") +
     " · " + S.items.length + " items" + (S.loc ? " · " + S.loc : "");
 
   renderPills();
@@ -738,7 +1068,7 @@ function openUnplaced(){
     var ah = root.querySelector("#allHere");
     if(ah) ah.onclick = function(){
       if(!confirm("Place all " + list.length + " items in " + S.loc + "?\n\nUse this only if they really all live there.")) return;
-      list.forEach(function(it){ S.place[it.vendor] = S.loc; });
+      list.forEach(function(it){ S.place[keyOf(it)] = S.loc; });
       save(K.place, S.place); closeModal(); render();
     };
   });
@@ -759,7 +1089,7 @@ function placeInto(it, back){
   openModal(html, function(root){
     root.querySelectorAll("[data-p]").forEach(function(b){
       b.onclick = function(){
-        S.place[it.vendor] = b.dataset.p;
+        S.place[keyOf(it)] = b.dataset.p;
         save(K.place, S.place);
         closeModal(); render();
         if(back) back();
@@ -867,15 +1197,24 @@ function renderSearch(){
 
   var ut = $("unToggle");
   if(ut) ut.onclick = function(){ S.onlyUn = !S.onlyUn; render(); };
-  $("q").oninput = function(){ runSearch(this.value); };
+  /* A scanner types fast and finishes with Enter. On Enter, an exact code
+     wins; otherwise fall back to the first result. */
+  $("q").oninput = function(){
+    var hit = exactByCode(this.value);
+    if(hit && S.scanJump){ this.value = ""; S.sel = hit.key; render(); return; }
+    runSearch(this.value);
+  };
   $("q").onkeydown = function(e){
-    if(e.key === "Enter"){
-      var f = $("res").querySelector("[data-key]");
-      if(f) f.click();
-    }
+    if(e.key !== "Enter") return;
+    e.preventDefault();
+    var hit = exactByCode(this.value);
+    if(hit){ this.value = ""; S.sel = hit.key; render(); return; }
+    var f = $("res").querySelector("[data-key]");
+    if(f) f.click();
   };
   runSearch("");
   renderCaps();
+  if(S.refocus){ S.refocus = false; setTimeout(function(){ var q = $("q"); if(q) q.focus(); }, 40); }
 }
 
 function renderOverview(){
@@ -895,6 +1234,22 @@ function renderOverview(){
   return h;
 }
 
+/* An exact scan code beats any substring match. A scanner sends the digits
+   then Enter, and "10120" is a substring of "101206" — without this, a scan
+   could land on a neighbour. */
+function exactByCode(term){
+  if(!term) return null;
+  var t = String(term).trim().toLowerCase(), hit = null;
+  for(var i = 0; i < S.items.length; i++){
+    var c = String(scanCode(S.items[i]) || "").toLowerCase();
+    if(c && c === t){
+      if(hit) return null;        /* ambiguous — let the list handle it */
+      hit = S.items[i];
+    }
+  }
+  return hit;
+}
+
 function runSearch(term){
   term = String(term || "").trim().toLowerCase();
   var here = [], other = [], i, it;
@@ -903,7 +1258,7 @@ function runSearch(term){
     it = S.items[i];
     if(S.onlyUn && placeOf(it)) continue;
     if(term){
-      var hay = (it.desc + " " + it.vendor).toLowerCase();
+      var hay = (it.desc + " " + it.vendor + " " + scanCode(it)).toLowerCase();
       var ok = true, parts = term.split(/\s+/);
       for(var p = 0; p < parts.length; p++){
         if(hay.indexOf(parts[p]) < 0){ ok = false; break; }
@@ -1029,7 +1384,7 @@ function renderEntry(){
       '</div>' +
       '<div class="erow2">' +
         '<button id="zeroBtn">None on hand</button>' +
-        '<button id="notHereBtn">Not in this location</button>' +
+        '<button id="notHereBtn">' + (home === S.loc ? "Not in this location" : "Set location") + '</button>' +
         '<button id="backBtn">Back to search</button>' +
       '</div>' +
     '</div>';
@@ -1057,7 +1412,7 @@ function renderEntry(){
         if(!ask) return;
         have = parseFloat(ask);
         if(!(have > 0)) return;
-        S.units[it.vendor] = {u: have, m: 1};
+        S.units[keyOf(it)] = {u: have, m: 1};
         save(K.units, S.units);
       }
       num.dataset.mode = "units";
@@ -1074,7 +1429,7 @@ function renderEntry(){
 
   $("addBtn").onclick  = function(){ commit("counted"); };
   $("zeroBtn").onclick = function(){ commit("zero"); };
-  $("backBtn").onclick = function(){ S.sel = null; render(); };
+  $("backBtn").onclick = function(){ S.sel = null; S.refocus = true; render(); };
   $("notHereBtn").onclick = function(){ askWhere(it); };
 
   function commit(st){
@@ -1089,22 +1444,38 @@ function renderEntry(){
       loc: S.loc, from: from, at: Date.now(),
       st: st === "zero" ? "zero" : "counted"
     };
-    S.place[it.vendor] = S.loc;
+    S.place[keyOf(it)] = S.loc;
     save(K.db, S.db); save(K.place, S.place);
     S.sel = null;
+    S.refocus = true;
     render();
   }
 }
 
 function askWhere(it){
   var home = placeOf(it);
-  var html = '<h2>Where is it then?</h2>' +
+  var mappedHere = (home === S.loc);
+
+  var html = '<h2>' + (mappedHere ? "Where is it then?" : "Where does it live?") + '</h2>' +
     '<div class="note">' + esc(it.desc) + '<br><span class="hint">' +
     (home ? 'Mapped to <b>' + esc(home) + '</b>.' : 'No location on file.') +
+    (it.cls ? ' The sheet files it under ' + esc(it.cls) + '.' : '') +
     '</span></div>' +
-    '<div class="locpick">' +
-      '<button data-w="__pend">I will find it later' +
-      '<div class="hint">Stays open. If you count it in another room, that wins. Anything still open at Export gets a last look.</div></button>';
+    '<div class="locpick">';
+
+  /* The active room is only a wrong answer when the item is already mapped to
+     it — that is the one case where "not in this location" rules it out. An
+     unplaced item, or one mapped elsewhere, can perfectly well live right
+     where you are standing. */
+  if(!mappedHere){
+    html += '<button data-w="' + esc(S.loc) + '">' +
+            (home ? 'Move to ' : 'It lives here — ') + esc(S.loc) +
+            '<div class="hint">Placed here without recording a count. Use Add instead if you are counting it now.</div></button>';
+  }
+
+  html += '<button data-w="__pend">I will find it later' +
+          '<div class="hint">Stays open. If you count it in another room, that wins. Anything still open at Export gets a last look.</div></button>';
+
   S.locs.forEach(function(l){
     if(l === S.loc) return;
     html += '<button data-w="' + esc(l) + '">Move to ' + esc(l) +
@@ -1121,12 +1492,18 @@ function askWhere(it){
         if(w === "__pend"){
           S.db[it.key] = {q: 0, mode: "cases", loc: "", at: Date.now(), st: "pending"};
         } else {
-          S.place[it.vendor] = w;
-          delete S.db[it.key];
+          S.place[keyOf(it)] = w;
+          var had = S.db[it.key];
+          if(had && (had.st === "counted" || had.st === "zero")){
+            /* Already counted — keep the number, just follow it to the new room. */
+            had.loc = w;
+          } else {
+            delete S.db[it.key];
+          }
           save(K.place, S.place);
         }
         save(K.db, S.db);
-        closeModal(); S.sel = null; render();
+        closeModal(); S.sel = null; S.refocus = true; render();
       };
     });
   });
@@ -1139,7 +1516,7 @@ function undoItem(key){
     if(S.undo[i].key === key){
       var u = S.undo.splice(i, 1)[0];
       if(u.prev) S.db[key] = u.prev; else delete S.db[key];
-      if(u.prevPlace) S.place[it.vendor] = u.prevPlace; else delete S.place[it.vendor];
+      if(u.prevPlace) S.place[keyOf(it)] = u.prevPlace; else delete S.place[keyOf(it)];
       save(K.db, S.db); save(K.place, S.place);
       render();
       return;
@@ -1333,7 +1710,7 @@ function openExport(){
         _type: "inventory-walk-map", _version: 1,
         _exported: new Date().toISOString(),
         _note: "Placements and units-per-case. Load this on any device to inherit what you have taught the app.",
-        locs: S.locs, place: S.place, units: S.units
+        locs: S.locs, place: S.place, units: S.units, codes: S.codes
       }, null, 2), "application/json");
     };
     root.querySelector("#dlCounts").onclick = function(){
@@ -1384,11 +1761,15 @@ function openSetup(){
       (S.items.length ? "Load a different export" : "Load the inventory export") + '</button>' +
     (S.meta ? '<div class="hint">Now: ' + esc(S.meta.file) + ' · ' + esc(S.meta.sheet) + ' · ' +
       S.items.length + ' items · count column "' + esc(S.meta.cols.qtyHeader || "?") + '"</div>' : '') +
+    '<h3>Paper</h3>' +
+    '<button class="bigbtn ghost" id="printBtn">Print room sheets</button>' +
+    '<div class="hint">Roster, pack size and a scannable barcode for each room.</div>' +
     '<h3>Locations</h3>' +
     '<div class="hint" style="margin-bottom:9px">' + S.locs.length + ' rooms · ' +
       placed + ' items placed · ' + unitsN + ' with units-per-case set</div>' +
     '<div class="row2"><button id="addLoc">Add a location</button>' +
-    '<button id="loadMap">Load a map file</button></div>' +
+    '<button id="loadMap">Load a map file</button>' +
+    '<button id="classMap">Build rooms from the sheet</button></div>' +
     '<div class="stack" style="margin-top:12px">' +
       S.locs.map(function(l){
         return '<div class="cap"><div class="d">' + esc(l) +
@@ -1403,6 +1784,10 @@ function openSetup(){
 
   openModal(html, function(root){
     root.querySelector("#pickFile").onclick = function(){ closeModal(); $("file").click(); };
+    root.querySelector("#printBtn").onclick = function(){
+      if(!S.items.length){ alert("Load a spreadsheet first."); return; }
+      closeModal(); openPrint();
+    };
     root.querySelector("#addLoc").onclick = function(){
       var n = prompt("Name of the location");
       if(!n) return;
@@ -1411,6 +1796,10 @@ function openSetup(){
       closeModal(); render(); openSetup();
     };
     root.querySelector("#loadMap").onclick = function(){ closeModal(); $("mapfile").click(); };
+    root.querySelector("#classMap").onclick = function(){
+      if(!S.items.length){ alert("Load a spreadsheet first."); return; }
+      closeModal(); openClassMap(null);
+    };
     root.querySelectorAll("[data-rm]").forEach(function(b){
       b.onclick = function(){
         var l = b.dataset.rm, n = expectedHere(l).length;
@@ -1461,13 +1850,14 @@ function loadMapFile(file){
       });
     }
 
+    if(j.codes) Object.keys(j.codes).forEach(function(k){ S.codes[k] = j.codes[k]; });
     var locs = j.locs || j.customLocations || [];
     var addedLoc = 0;
     locs.forEach(function(l){ if(l && S.locs.indexOf(l) < 0){ S.locs.push(l); addedLoc++; } });
     Object.keys(kept).forEach(function(k){ S.place[k] = kept[k]; });
     Object.keys(units).forEach(function(k){ S.units[k] = units[k]; });
 
-    save(K.place, S.place); save(K.units, S.units); save(K.locs, S.locs);
+    save(K.place, S.place); save(K.units, S.units); save(K.locs, S.locs); save(K.codes, S.codes);
     render();
     openModal('<h2>Map loaded</h2><table class="sum">' +
       '<tr><td>Placements</td><td class="n">' + Object.keys(kept).length + '</td></tr>' +
@@ -1480,6 +1870,134 @@ function loadMapFile(file){
       function(root){ root.querySelector("#okMap").onclick = closeModal; });
   };
   fr.readAsText(file);
+}
+
+/* ==========================================================================
+   PRINTABLE ROOM SHEET
+   One page per room: the roster, a barcode, and a box to tick. Disposable by
+   design — the roster maintains itself out of counting, so when the paper is
+   stale you reprint rather than edit it.
+   ========================================================================== */
+
+/* Items whose name AND pack are close enough to another item in the SAME room
+   that the paper alone will not tell them apart. Worth a mark. */
+function lookalikes(list){
+  function words(t){
+    var m = String(t).toUpperCase().match(/[A-Z0-9]+/g);
+    return m || [];
+  }
+  function overlap(a, b){
+    var A = words(a), B = words(b), set = {}, hit = 0, i;
+    for(i = 0; i < A.length; i++) set[A[i]] = 1;
+    for(i = 0; i < B.length; i++) if(set[B[i]]){ hit++; set[B[i]] = 0; }
+    var union = A.length + B.length - hit;
+    return union ? hit / union : 0;
+  }
+  var flag = {};
+  function mark(key, level){
+    /* "hard" always wins over "check" — same pack means the paper cannot
+       separate them at all. */
+    if(level === "hard" || !flag[key]) flag[key] = level;
+  }
+  for(var i = 0; i < list.length; i++){
+    for(var j = i + 1; j < list.length; j++){
+      if(overlap(list[i].desc, list[j].desc) < 0.6) continue;
+      var level = ((list[i].pack || "") === (list[j].pack || "")) ? "hard" : "check";
+      mark(list[i].key, level);
+      mark(list[j].key, level);
+    }
+  }
+  return flag;
+}
+
+function roomSheetHTML(locs){
+  var out = '<div class="sheetdoc">';
+  var when = new Date().toLocaleDateString();
+
+  locs.forEach(function(loc, n){
+    var list = expectedHere(loc).slice().sort(function(a, b){
+      return a.desc < b.desc ? -1 : 1;
+    });
+    var flag = lookalikes(list);
+
+    out += '<section class="page' + (n ? " brk" : "") + '">' +
+      '<div class="ph"><h1>' + esc(loc) + '</h1>' +
+      '<div class="pm">' + list.length + ' items · ' + esc(S.meta.file || "") +
+      ' · printed ' + esc(when) + '</div></div>';
+
+    if(!list.length){
+      out += '<p class="pempty">Nothing is mapped to this room yet.</p></section>';
+      return;
+    }
+
+    out += '<table class="psheet"><thead><tr>' +
+      '<th class="c">&#10003;</th><th>Item</th><th>Pack</th><th>Dist #</th>' +
+      '<th class="bcth">Barcode</th><th class="qc">Count</th></tr></thead><tbody>';
+
+    list.forEach(function(it){
+      var f = flag[it.key];
+      var code = scanCode(it);
+      var svg = barcodeSVG(code, {height: 28, unit: 1});
+      out += '<tr' + (f ? ' class="fl"' : '') + '>' +
+        '<td class="c"><span class="box"></span></td>' +
+        '<td class="nm">' + esc(it.desc) +
+          (f === "hard" ? '<span class="warnx">lookalike in this room — check the box</span>' :
+           f === "check" ? '<span class="warnx">similar name here — check pack size</span>' : '') +
+        '</td>' +
+        '<td class="pk">' + esc(it.pack || "—") + '</td>' +
+        '<td class="vn">' + esc(code || "—") + '</td>' +
+        '<td class="bcd">' + (svg || '<span class="pk">no code</span>') + '</td>' +
+        '<td class="qc"></td></tr>';
+    });
+
+    out += '</tbody></table>' +
+      '<table class="psheet wr"><tbody>' +
+        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="qc"></td></tr>' +
+        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="qc"></td></tr>' +
+        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="qc"></td></tr>' +
+      '</tbody></table>' +
+      '<p class="pfoot">Anything written in gets picked up properly the next time you count it in this room — then reprint.</p>' +
+      '</section>';
+  });
+
+  return out + '</div>';
+}
+
+function openPrint(){
+  var html = '<h2>Print room sheets</h2>' +
+    '<div class="hint">One page per room, with barcodes. Reprint whenever it goes stale — the roster keeps itself current from your counts.</div>' +
+    '<div class="stack" style="margin-top:12px">';
+  S.locs.forEach(function(l){
+    var n = expectedHere(l).length;
+    html += '<div class="cap"><div class="d">' + esc(l) + '<small>' + n + ' items</small></div>' +
+            '<button class="u" data-pr="' + esc(l) + '">print</button></div>';
+  });
+  html += '</div><button class="bigbtn" id="prAll">Print every room</button>' +
+    '<div class="hint">In the print dialog, turn on background graphics if the barcodes look faint.</div>';
+
+  openModal(html, function(root){
+    root.querySelectorAll("[data-pr]").forEach(function(b){
+      b.onclick = function(){ doPrint([b.dataset.pr]); };
+    });
+    root.querySelector("#prAll").onclick = function(){
+      doPrint(S.locs.filter(function(l){ return expectedHere(l).length; }));
+    };
+  });
+}
+
+function doPrint(locs){
+  if(!locs.length){ alert("Nothing to print."); return; }
+  var host = $("printarea");
+  host.innerHTML = roomSheetHTML(locs);
+  document.body.classList.add("printing");
+  closeModal();
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){
+      document.body.classList.remove("printing");
+      host.innerHTML = "";
+    }, 600);
+  }, 120);
 }
 
 /* ==========================================================================
@@ -1504,14 +2022,32 @@ function closeModal(){
    BOOT
    ========================================================================== */
 function boot(){
+  S.site  = load(K.site, null);
   S.place = load(K.place, null);
   S.units = load(K.units, null);
   S.locs  = load(K.locs,  null);
+  if(!S.place) S.place = {};
+  if(!S.units) S.units = {};
+  if(!S.locs)  S.locs  = [];
 
-  /* First run inherits the curated map baked into this file. */
-  if(!S.place){ S.place = {}; Object.keys(SEED.places).forEach(function(k){ S.place[k] = SEED.places[k]; }); save(K.place, S.place); }
-  if(!S.units){ S.units = {}; Object.keys(SEED.units).forEach(function(k){ S.units[k] = SEED.units[k]; }); save(K.units, S.units); }
-  if(!S.locs){ S.locs = SEED.locs.slice(); save(K.locs, S.locs); }
+  S.codes = load(K.codes, null);
+  if(!S.codes){
+    S.codes = {};
+    if(SEED.codes) Object.keys(SEED.codes).forEach(function(k){ S.codes[k] = SEED.codes[k]; });
+    save(K.codes, S.codes);
+  }
+
+  /* An earlier build keyed placements by Dist # alone, so every item without
+     one shared the empty-string slot and moved as a group. Drop that slot;
+     those items go back to unplaced and sort themselves properly. */
+  if(S.place[""] !== undefined){
+    delete S.place[""];
+    save(K.place, S.place);
+  }
+  if(S.units[""] !== undefined){
+    delete S.units[""];
+    save(K.units, S.units);
+  }
 
   S.db   = load(K.db, {});
   S.meta = load(K.meta, null);
@@ -1540,6 +2076,47 @@ function boot(){
   $("pickBtn").onclick   = function(){ $("file").click(); };
 
   render();
+  if(!S.site) askSite();
+}
+
+/* ==========================================================================
+   WHICH BUILDING
+   The curated map baked into this file is Woodworth's. Handing it to another
+   kitchen would seed hundreds of placements naming rooms that do not exist
+   there, so a new building starts from its own spreadsheet instead.
+   ========================================================================== */
+function askSite(){
+  var html = '<h2>Which kitchen is this?</h2>' +
+    '<div class="hint">Asked once. It decides where your starting locations come from.</div>' +
+    '<div class="locpick" style="margin-top:14px">' +
+      '<button data-site="Woodworth">Woodworth' +
+        '<div class="hint">Loads the map already built here — ' +
+        Object.keys(SEED.places).length + ' placements and ' +
+        Object.keys(SEED.units).length + ' units-per-case settings.</div></button>' +
+      '<button data-site="__other">Another kitchen' +
+        '<div class="hint">Starts fresh. When you load the spreadsheet, the app builds rooms from how the report already groups things, and you say which room each group lives in.</div></button>' +
+    '</div>';
+  openModal(html, function(root){
+    root.querySelectorAll("[data-site]").forEach(function(b){
+      b.onclick = function(){
+        var v = b.dataset.site;
+        if(v === "Woodworth"){
+          S.site = {name: "Woodworth", seeded: true};
+          Object.keys(SEED.places).forEach(function(k){ S.place[k] = SEED.places[k]; });
+          Object.keys(SEED.units).forEach(function(k){ S.units[k] = SEED.units[k]; });
+          SEED.locs.forEach(function(l){ if(S.locs.indexOf(l) < 0) S.locs.push(l); });
+          save(K.place, S.place); save(K.units, S.units); save(K.locs, S.locs);
+          save(K.site, S.site);
+          closeModal(); render();
+          return;
+        }
+        var n = prompt("Name of this kitchen", "");
+        S.site = {name: (n || "").trim() || "This kitchen", seeded: false};
+        save(K.site, S.site);
+        closeModal(); render();
+      };
+    });
+  });
 }
 document.addEventListener("DOMContentLoaded", boot);
 </script>
