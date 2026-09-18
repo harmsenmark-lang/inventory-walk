@@ -323,6 +323,19 @@ select.cmsel{
   border:1px solid var(--line-strong);border-radius:var(--r);
   padding:9px 8px;font-size:14px;font-weight:600;
 }
+
+/* ---------- nicknames ---------- */
+.tagx.nick{background:var(--amber-soft);color:var(--amber)}
+.enick{
+  font-size:15px;font-weight:600;color:var(--amber);
+  background:var(--amber-soft);border-radius:3px;
+  padding:2px 8px;vertical-align:middle;white-space:nowrap;
+}
+.sheetdoc .nickx{
+  display:inline-block;font-size:8.5pt;font-weight:700;
+  border:1px solid #000;border-radius:2px;padding:0 4px;margin-left:6px;
+  vertical-align:middle;
+}
 </style>
 </head>
 <body>
@@ -476,7 +489,8 @@ var K = {
   rows:  "wih_v1_rows",
   last:  "wih_v1_lastroster",
   codes: "wih_v1_codes",
-  site:  "wih_v1_site"
+  site:  "wih_v1_site",
+  nick:  "wih_v1_nick"
 };
 
 var S = {
@@ -487,6 +501,7 @@ var S = {
   units: {},     /* vendor  -> {u:number,m:0|1} */
   codes: {},     /* description -> scan code, for items with no Dist # */
   site:  null,   /* {name, seeded} — which building this device is counting */
+  nick:  {},     /* keyOf(item) -> what the kitchen actually calls it */
   db:    {},     /* key     -> {q, mode, loc, at, st} st: counted | zero | pending */
   locs:  [],
   loc:   null,
@@ -934,6 +949,7 @@ function keyOf(it){
 }
 
 function placeOf(it){ return S.place[keyOf(it)] || ""; }
+function nickOf(it){ return S.nick[keyOf(it)] || ""; }
 function upc(it){
   var u = S.units[keyOf(it)];
   if(u && u.u) return u.u;
@@ -1258,7 +1274,7 @@ function runSearch(term){
     it = S.items[i];
     if(S.onlyUn && placeOf(it)) continue;
     if(term){
-      var hay = (it.desc + " " + it.vendor + " " + scanCode(it)).toLowerCase();
+      var hay = (it.desc + " " + it.vendor + " " + scanCode(it) + " " + nickOf(it)).toLowerCase();
       var ok = true, parts = term.split(/\s+/);
       for(var p = 0; p < parts.length; p++){
         if(hay.indexOf(parts[p]) < 0){ ok = false; break; }
@@ -1306,8 +1322,10 @@ function runSearch(term){
     } else {
       tag = '<span class="tagx">no location</span>';
     }
+    var nk = nickOf(it);
     html += '<button class="' + cls + '" data-key="' + esc(it.key) + '">' +
-            '<div class="d">' + esc(it.desc) + tag + '</div>' +
+            '<div class="d">' + esc(it.desc) +
+            (nk ? '<span class="tagx nick">' + esc(nk) + '</span>' : '') + tag + '</div>' +
             '<div class="s">' + esc(it.vendor) + (it.pack ? " · " + esc(it.pack) : "") + '</div></button>';
   });
   if(list.length > shown.length){
@@ -1334,6 +1352,7 @@ function renderCaps(){
     var moved = r.from && r.from !== S.loc;
     html += '<div class="cap ' + (r.st === "zero" ? "zero" : (moved ? "moved" : "")) + '">' +
             '<div class="d">' + esc(it.desc) +
+            (nickOf(it) ? ' <span class="tagx nick">' + esc(nickOf(it)) + '</span>' : '') +
             '<small>' + esc(it.vendor) +
             (r.mode === "units" ? " · entered " + r.q + " units" : "") +
             (moved ? " · moved from " + esc(r.from) : "") + '</small></div>' +
@@ -1365,7 +1384,8 @@ function renderEntry(){
     '<div class="card">' +
       '<div class="etop">' +
         '<div class="l">' +
-          '<div class="ename">' + esc(it.desc) + '</div>' +
+          '<div class="ename">' + esc(it.desc) +
+            (nickOf(it) ? ' <span class="enick">' + esc(nickOf(it)) + '</span>' : '') + '</div>' +
           '<div class="esub">' + esc(it.vendor) +
             (it.pack ? " · " + esc(it.pack) : ' · <span style="color:var(--amber)">no pack size</span>') +
             ' · ' + where + '</div>' +
@@ -1385,6 +1405,7 @@ function renderEntry(){
       '<div class="erow2">' +
         '<button id="zeroBtn">None on hand</button>' +
         '<button id="notHereBtn">' + (home === S.loc ? "Not in this location" : "Set location") + '</button>' +
+        '<button id="nickBtn">' + (nickOf(it) ? "Nickname: " + esc(nickOf(it)) : "Give it a nickname") + '</button>' +
         '<button id="backBtn">Back to search</button>' +
       '</div>' +
     '</div>';
@@ -1431,6 +1452,15 @@ function renderEntry(){
   $("zeroBtn").onclick = function(){ commit("zero"); };
   $("backBtn").onclick = function(){ S.sel = null; S.refocus = true; render(); };
   $("notHereBtn").onclick = function(){ askWhere(it); };
+  $("nickBtn").onclick = function(){
+    var n = prompt("What does the kitchen call it?\n\nYou'll be able to find it by this from now on — and it prints on the room sheet.",
+                   nickOf(it) || "");
+    if(n === null) return;
+    n = n.trim();
+    if(n) S.nick[keyOf(it)] = n; else delete S.nick[keyOf(it)];
+    save(K.nick, S.nick);
+    renderEntry();
+  };
 
   function commit(st){
     var q = parseFloat(num.value);
@@ -1710,7 +1740,7 @@ function openExport(){
         _type: "inventory-walk-map", _version: 1,
         _exported: new Date().toISOString(),
         _note: "Placements and units-per-case. Load this on any device to inherit what you have taught the app.",
-        locs: S.locs, place: S.place, units: S.units, codes: S.codes
+        locs: S.locs, place: S.place, units: S.units, codes: S.codes, nick: S.nick
       }, null, 2), "application/json");
     };
     root.querySelector("#dlCounts").onclick = function(){
@@ -1851,13 +1881,15 @@ function loadMapFile(file){
     }
 
     if(j.codes) Object.keys(j.codes).forEach(function(k){ S.codes[k] = j.codes[k]; });
+    if(j.nick)  Object.keys(j.nick).forEach(function(k){ S.nick[k] = j.nick[k]; });
     var locs = j.locs || j.customLocations || [];
     var addedLoc = 0;
     locs.forEach(function(l){ if(l && S.locs.indexOf(l) < 0){ S.locs.push(l); addedLoc++; } });
     Object.keys(kept).forEach(function(k){ S.place[k] = kept[k]; });
     Object.keys(units).forEach(function(k){ S.units[k] = units[k]; });
 
-    save(K.place, S.place); save(K.units, S.units); save(K.locs, S.locs); save(K.codes, S.codes);
+    save(K.place, S.place); save(K.units, S.units); save(K.locs, S.locs);
+    save(K.codes, S.codes); save(K.nick, S.nick);
     render();
     openModal('<h2>Map loaded</h2><table class="sum">' +
       '<tr><td>Placements</td><td class="n">' + Object.keys(kept).length + '</td></tr>' +
@@ -1941,6 +1973,7 @@ function roomSheetHTML(locs){
       out += '<tr' + (f ? ' class="fl"' : '') + '>' +
         '<td class="c"><span class="box"></span></td>' +
         '<td class="nm">' + esc(it.desc) +
+          (nickOf(it) ? '<span class="nickx">' + esc(nickOf(it)) + '</span>' : '') +
           (f === "hard" ? '<span class="warnx">lookalike in this room — check the box</span>' :
            f === "check" ? '<span class="warnx">similar name here — check pack size</span>' : '') +
         '</td>' +
@@ -2029,6 +2062,8 @@ function boot(){
   if(!S.place) S.place = {};
   if(!S.units) S.units = {};
   if(!S.locs)  S.locs  = [];
+
+  S.nick  = load(K.nick, {}) || {};
 
   S.codes = load(K.codes, null);
   if(!S.codes){
