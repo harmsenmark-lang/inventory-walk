@@ -336,6 +336,20 @@ select.cmsel{
   border:1px solid #000;border-radius:2px;padding:0 4px;margin-left:6px;
   vertical-align:middle;
 }
+
+/* ---------- use last ---------- */
+#lastBtn.lastbtn{
+  background:var(--blue-soft);border-color:var(--blue);color:var(--blue);
+  font-variant-numeric:tabular-nums;
+}
+.etop .r .klast{
+  color:var(--muted);font-size:12px;margin-top:3px;
+  font-variant-numeric:tabular-nums;
+}
+table.psheet th.lq,table.psheet td.lq{
+  width:52px;text-align:right;font-size:8.5pt;color:#555;
+  font-variant-numeric:tabular-nums;border-left:1px solid #E2E2E2;
+}
 </style>
 </head>
 <body>
@@ -380,6 +394,7 @@ select.cmsel{
 <div id="printarea"></div>
 
 <input type="file" id="file" accept=".xlsx,.xls" style="position:absolute;left:-9999px">
+<input type="file" id="lastfile" accept=".xlsx,.xls" style="position:absolute;left:-9999px">
 <input type="file" id="mapfile" accept=".json" style="position:absolute;left:-9999px">
 
 <script>
@@ -490,7 +505,8 @@ var K = {
   last:  "wih_v1_lastroster",
   codes: "wih_v1_codes",
   site:  "wih_v1_site",
-  nick:  "wih_v1_nick"
+  nick:  "wih_v1_nick",
+  last:  "wih_v1_lastcount"
 };
 
 var S = {
@@ -502,6 +518,7 @@ var S = {
   codes: {},     /* description -> scan code, for items with no Dist # */
   site:  null,   /* {name, seeded} — which building this device is counting */
   nick:  {},     /* keyOf(item) -> what the kitchen actually calls it */
+  lastq: {},     /* keyOf(item) -> cases counted last time round */
   db:    {},     /* key     -> {q, mode, loc, at, st} st: counted | zero | pending */
   locs:  [],
   loc:   null,
@@ -728,6 +745,16 @@ function doImport(wb, sheetName, fileName){
     diff = {added: addedL, gone: goneL, prevCount: prev.length};
   }
 
+  /* Starting a clean count: the one being replaced becomes "last". */
+  if(!keep && Object.keys(S.db).length){
+    var snap = {};
+    S.items.forEach(function(it){
+      var r = S.db[it.key];
+      if(r && (r.st === "counted" || r.st === "zero")) snap[keyOf(it)] = valueOf(r, it);
+    });
+    if(Object.keys(snap).length){ S.lastq = snap; save(K.last, S.lastq); }
+  }
+
   S.rows  = rows;
   S.items = p.items;
   S.meta  = p.meta;
@@ -950,6 +977,14 @@ function keyOf(it){
 
 function placeOf(it){ return S.place[keyOf(it)] || ""; }
 function nickOf(it){ return S.nick[keyOf(it)] || ""; }
+
+/* What this item came to last count. Spices, chemicals and paper barely move
+   week to week, so carrying the number forward saves real time — and a wrong
+   carry is visible, because the number is right there on the card. */
+function lastOf(it){
+  var k = keyOf(it);
+  return Object.prototype.hasOwnProperty.call(S.lastq, k) ? S.lastq[k] : null;
+}
 function upc(it){
   var u = S.units[keyOf(it)];
   if(u && u.u) return u.u;
@@ -1375,6 +1410,7 @@ function renderEntry(){
   var r = rec(it.key), home = placeOf(it);
   var mode = (r && r.mode) || "cases";
   var u = upc(it);
+  var lastQ = lastOf(it);
 
   var where = home
     ? (home === S.loc ? '<b>' + esc(home) + '</b>' : '<b style="color:var(--amber)">' + esc(home) + '</b> → ' + esc(S.loc))
@@ -1391,7 +1427,9 @@ function renderEntry(){
             ' · ' + where + '</div>' +
         '</div>' +
         '<div class="r"><div class="k">Goes in the spreadsheet</div>' +
-        '<div class="v" id="preview">' + (r && r.st !== "pending" ? fmt(valueOf(r, it)) : "0.000") + '</div></div>' +
+        '<div class="v" id="preview">' + (r && r.st !== "pending" ? fmt(valueOf(r, it)) : "0.000") + '</div>' +
+        (lastQ !== null ? '<div class="klast">last count ' + fmt(lastQ) + '</div>' : '') +
+        '</div>' +
       '</div>' +
       '<div class="entryrow">' +
         '<input id="num" type="text" inputmode="decimal" autocomplete="off" value="' +
@@ -1403,6 +1441,8 @@ function renderEntry(){
         '<button id="addBtn">Add</button>' +
       '</div>' +
       '<div class="erow2">' +
+        (lastQ !== null && !(r && r.st === "counted")
+           ? '<button id="lastBtn" class="lastbtn">Use last: ' + fmt(lastQ) + '</button>' : '') +
         '<button id="zeroBtn">None on hand</button>' +
         '<button id="notHereBtn">' + (home === S.loc ? "Not in this location" : "Set location") + '</button>' +
         '<button id="nickBtn">' + (nickOf(it) ? "Nickname: " + esc(nickOf(it)) : "Give it a nickname") + '</button>' +
@@ -1446,6 +1486,15 @@ function renderEntry(){
         ? (uu ? uu + " per case" : "tap for cases") : "tap for units") + '</span>';
     preview();
     num.focus();
+  };
+
+  var lb = $("lastBtn");
+  if(lb) lb.onclick = function(){
+    var q = lastOf(it);
+    if(q === null) return;
+    num.dataset.mode = "cases";
+    num.value = q;
+    commit(q === 0 ? "zero" : "counted");
   };
 
   $("addBtn").onclick  = function(){ commit("counted"); };
@@ -1751,7 +1800,7 @@ function openExport(){
         _exported: new Date().toISOString(),
         _note: "Everything: rooms, placements, units-per-case, nicknames, codes and this count. Load via Setup - Load a backup.",
         site: S.site, locs: S.locs, place: S.place, units: S.units,
-        codes: S.codes, nick: S.nick,
+        codes: S.codes, nick: S.nick, lastq: S.lastq,
         meta: S.meta, db: S.db, rows: S.rows
       }, null, 2), "application/json");
     };
@@ -1799,6 +1848,13 @@ function openSetup(){
       (S.items.length ? "Load a different export" : "Load the inventory export") + '</button>' +
     (S.meta ? '<div class="hint">Now: ' + esc(S.meta.file) + ' · ' + esc(S.meta.sheet) + ' · ' +
       S.items.length + ' items · count column "' + esc(S.meta.cols.qtyHeader || "?") + '"</div>' : '') +
+    '<h3>Last count</h3>' +
+    '<button class="bigbtn ghost" id="lastFileBtn">Load last week\'s filled sheet</button>' +
+    '<div class="hint">' +
+      (Object.keys(S.lastq).length
+        ? Object.keys(S.lastq).length + ' numbers on file — each item shows a Use last button.'
+        : 'No previous numbers yet. They also carry over on their own whenever you start a fresh count.') +
+    '</div>' +
     '<h3>Paper</h3>' +
     '<button class="bigbtn ghost" id="printBtn">Print room sheets</button>' +
     '<div class="hint">Roster, pack size and a scannable barcode for each room.</div>' +
@@ -1823,6 +1879,10 @@ function openSetup(){
 
   openModal(html, function(root){
     root.querySelector("#pickFile").onclick = function(){ closeModal(); $("file").click(); };
+    root.querySelector("#lastFileBtn").onclick = function(){
+      if(!S.items.length){ alert("Load this week's spreadsheet first."); return; }
+      closeModal(); $("lastfile").click();
+    };
     root.querySelector("#printBtn").onclick = function(){
       if(!S.items.length){ alert("Load a spreadsheet first."); return; }
       closeModal(); openPrint();
@@ -1891,6 +1951,7 @@ function loadMapFile(file){
 
     if(j.codes) Object.keys(j.codes).forEach(function(k){ S.codes[k] = j.codes[k]; });
     if(j.nick)  Object.keys(j.nick).forEach(function(k){ S.nick[k] = j.nick[k]; });
+    if(j.lastq){ S.lastq = j.lastq; save(K.last, S.lastq); }
     var locs = j.locs || j.customLocations || [];
     var addedLoc = 0;
     locs.forEach(function(l){ if(l && S.locs.indexOf(l) < 0){ S.locs.push(l); addedLoc++; } });
@@ -2002,11 +2063,12 @@ function roomSheetHTML(locs){
 
     out += '<table class="psheet"><thead><tr>' +
       '<th class="c">&#10003;</th><th>Item</th><th>Pack</th><th>Dist #</th>' +
-      '<th class="bcth">Barcode</th><th class="qc">Count</th></tr></thead><tbody>';
+      '<th class="bcth">Barcode</th><th class="lq">Last</th><th class="qc">Count</th></tr></thead><tbody>';
 
     list.forEach(function(it){
       var f = flag[it.key];
       var code = scanCode(it);
+      var lq = lastOf(it);
       var svg = barcodeSVG(code, {height: 28, unit: 1});
       out += '<tr' + (f ? ' class="fl"' : '') + '>' +
         '<td class="c"><span class="box"></span></td>' +
@@ -2018,14 +2080,15 @@ function roomSheetHTML(locs){
         '<td class="pk">' + esc(it.pack || "—") + '</td>' +
         '<td class="vn">' + esc(code || "—") + '</td>' +
         '<td class="bcd">' + (svg || '<span class="pk">no code</span>') + '</td>' +
+        '<td class="lq">' + (lq === null ? "" : fmt(lq)) + '</td>' +
         '<td class="qc"></td></tr>';
     });
 
     out += '</tbody></table>' +
       '<table class="psheet wr"><tbody>' +
-        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="qc"></td></tr>' +
-        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="qc"></td></tr>' +
-        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="qc"></td></tr>' +
+        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="lq"></td><td class="qc"></td></tr>' +
+        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="lq"></td><td class="qc"></td></tr>' +
+        '<tr><td class="c"><span class="box"></span></td><td class="wrl">Write-in</td><td class="lq"></td><td class="qc"></td></tr>' +
       '</tbody></table>' +
       '<p class="pfoot">Anything written in gets picked up properly the next time you count it in this room — then reprint.</p>' +
       '</section>';
@@ -2072,6 +2135,73 @@ function doPrint(locs){
 }
 
 /* ==========================================================================
+   LAST WEEK'S NUMBERS FROM A FILLED SPREADSHEET
+   When there is no backup from the previous count — a new device, or the
+   count was done on paper — the filled export is the record. Read its count
+   column straight into "last".
+   ========================================================================== */
+function loadLastFile(file){
+  var fr = new FileReader();
+  fr.onload = function(e){
+    var wb;
+    try { wb = XLSX.read(new Uint8Array(e.target.result), {type: "array"}); }
+    catch(err){ alert("Could not read that file.\n\n" + err.message); return; }
+
+    var best = null;
+    wb.SheetNames.forEach(function(n){
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], {header: 1, defval: ""});
+      if(rows.length < 6) return;
+      var C = detectCols(rows), filled = 0, i, r;
+      for(i = C.firstData; i < rows.length; i++){
+        r = rows[i];
+        if(!r || !r[C.desc]) continue;
+        if(r[C.qty] !== "" && r[C.qty] !== null && !isNaN(parseFloat(r[C.qty]))) filled++;
+      }
+      if(!best || filled > best.filled) best = {rows: rows, cols: C, filled: filled, name: n};
+    });
+
+    if(!best || !best.filled){
+      alert("No counts found in that file.\n\nThe count column looks empty — check you picked the filled copy.");
+      return;
+    }
+
+    /* Match on the same key the rest of the app uses, so the numbers land on
+       the right items even when the row order has changed. */
+    var byKey = {}, i, r, vendor, desc, k;
+    for(i = best.cols.firstData; i < best.rows.length; i++){
+      r = best.rows[i];
+      if(!r || !r[best.cols.desc]) continue;
+      desc = String(r[best.cols.desc]).trim();
+      vendor = String(r[best.cols.vendor] || "").trim();
+      var q = parseFloat(r[best.cols.qty]);
+      if(isNaN(q)) continue;
+      k = vendor || (S.codes[desc] ? "c:" + S.codes[desc] : "d:" + desc);
+      byKey[k] = q;
+    }
+
+    var hit = 0, miss = 0;
+    S.items.forEach(function(it){
+      if(Object.prototype.hasOwnProperty.call(byKey, keyOf(it))) hit++; else miss++;
+    });
+
+    S.lastq = byKey;
+    save(K.last, S.lastq);
+    render();
+
+    openModal('<h2>Last count loaded</h2>' +
+      '<table class="sum">' +
+        '<tr><td>Numbers read</td><td class="n">' + Object.keys(byKey).length + '</td></tr>' +
+        '<tr><td>Matched to items on this sheet</td><td class="n">' + hit + '</td></tr>' +
+        '<tr><td>No number from last time</td><td class="n">' + miss + '</td></tr>' +
+      '</table>' +
+      '<div class="hint">Each item now shows a <b>Use last</b> button on its card. One tap enters that number and moves on — handy for spices and chemicals that barely move.</div>' +
+      '<button class="bigbtn" id="okLast">OK</button>',
+      function(root){ root.querySelector("#okLast").onclick = closeModal; });
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+/* ==========================================================================
    MODAL
    ========================================================================== */
 function openModal(html, bind){
@@ -2102,6 +2232,7 @@ function boot(){
   if(!S.locs)  S.locs  = [];
 
   S.nick  = load(K.nick, {}) || {};
+  S.lastq = load(K.last, {}) || {};
 
   S.codes = load(K.codes, null);
   if(!S.codes){
@@ -2133,6 +2264,10 @@ function boot(){
 
   $("file").onchange = function(){
     if(this.files && this.files[0]) handleFile(this.files[0]);
+    this.value = "";
+  };
+  $("lastfile").onchange = function(){
+    if(this.files && this.files[0]) loadLastFile(this.files[0]);
     this.value = "";
   };
   $("mapfile").onchange = function(){
