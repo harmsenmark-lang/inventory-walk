@@ -621,6 +621,23 @@ function unitsFromPack(pack){
   return parseInt(nums[0], 10) || 0;
 }
 
+/* A pack like "1/150 ct/ea" means one case holding 150 countable pieces. That
+   is a good SUGGESTION when someone asks to count in units, but a poor
+   default: for trays and produce you may well prefer to eyeball cases, and
+   several of the stored settings deliberately say 1. So this only pre-fills
+   the prompt — it never sets anything on its own. */
+function packCountHint(pack){
+  if(!pack) return 0;
+  var m = String(pack).toLowerCase().match(/1\s*\/\s*(\d+(?:\.\d+)?)\s*(ct|count|ea|each|pc|pcs)\b/);
+  return m ? Math.round(parseFloat(m[1])) : 0;
+}
+
+/* Did someone set this by hand, or is it only what the pack string implied? */
+function hasManualUnits(it){
+  var u = S.units[keyOf(it)];
+  return !!(u && u.u);
+}
+
 /* ==========================================================================
    IMPORT
    ========================================================================== */
@@ -1436,8 +1453,9 @@ function renderEntry(){
           (r && r.st === "counted" ? esc(r.q) : "") + '" placeholder="0">' +
         '<button id="modeBtn">' + (mode === "units" ? "UNITS" : "CASES") +
           '<span class="sm">' + (mode === "units"
-            ? (u ? u + " per case" : "tap for cases")
-            : "tap for units") + '</span></button>' +
+            ? (u > 1 ? u + " per case" : "tap for cases")
+            : (u > 1 ? "tap for units · " + u + " per case"
+                     : "tap to set units")) + '</span></button>' +
         '<button id="addBtn">Add</button>' +
       '</div>' +
       '<div class="erow2">' +
@@ -1467,14 +1485,22 @@ function renderEntry(){
     var m = num.dataset.mode;
     if(m === "cases"){
       var have = upc(it);
-      if(!have){
-        var ask = prompt("How many units in one case of " + it.desc + "?" +
-                         (it.pack ? "\n\nPack Type says: " + it.pack : "\n\nThis report has no pack size."), "");
-        if(!ask) return;
+      /* Nothing useful to divide by — ask. "1 per case" is not a usable
+         answer, so it counts as nothing unless someone chose it on purpose. */
+      if(!have || (have <= 1 && !hasManualUnits(it))){
+        var hint = packCountHint(it.pack);
+        var ask = prompt(
+          "How many units in one case of " + it.desc + "?" +
+          (it.pack ? "\n\nPack Type says: " + it.pack : "\n\nThis report has no pack size.") +
+          (hint ? "\n\nLooks like " + hint + " per case — change it if that is not how you count them." : "") +
+          "\n\nEnter 1 to keep counting this one in cases.",
+          hint ? String(hint) : "");
+        if(ask === null || ask === "") return;
         have = parseFloat(ask);
         if(!(have > 0)) return;
         S.units[keyOf(it)] = {u: have, m: 1};
         save(K.units, S.units);
+        if(have === 1){ preview(); num.focus(); return; }   /* stays in cases */
       }
       num.dataset.mode = "units";
     } else {
@@ -1483,7 +1509,8 @@ function renderEntry(){
     var uu = upc(it);
     $("modeBtn").innerHTML = (num.dataset.mode === "units" ? "UNITS" : "CASES") +
       '<span class="sm">' + (num.dataset.mode === "units"
-        ? (uu ? uu + " per case" : "tap for cases") : "tap for units") + '</span>';
+        ? (uu > 1 ? uu + " per case" : "tap for cases")
+        : (uu > 1 ? "tap for units · " + uu + " per case" : "tap to set units")) + '</span>';
     preview();
     num.focus();
   };
