@@ -1705,11 +1705,13 @@ function openExport(){
     '<button class="bigbtn green" id="copyBtn">Copy ' + lines.length + ' rows</button>' +
     '<div class="hint">Click the first quantity cell, then paste. Values are in cases — the same unit the sheet uses. Nothing is converted on the way out.</div>' +
     '<h3>Backups</h3><div class="row2">' +
-      '<button id="dlMap">Download location map</button>' +
-      '<button id="dlCounts">Download counts</button>' +
+      '<button id="dlAll">Download everything</button>' +
+      '<button id="dlMap">Location map only</button>' +
       '<button id="dlCsv">Download CSV</button>' +
     '</div>' +
-    '<div class="hint">The location map is the valuable one — it carries every placement and units-per-case you have taught it.</div>';
+    '<div class="hint"><b>Download everything</b> carries this count plus your rooms, placements, nicknames and units-per-case. ' +
+    'Load it on another device (Setup → Load a backup) to pick the count up where you left it. ' +
+    '<b>Location map only</b> leaves the counts out — use it to hand another kitchen your placements without your numbers.</div>';
 
   openModal(html, function(root){
     root.querySelectorAll("[data-z]").forEach(function(b){
@@ -1743,9 +1745,15 @@ function openExport(){
         locs: S.locs, place: S.place, units: S.units, codes: S.codes, nick: S.nick
       }, null, 2), "application/json");
     };
-    root.querySelector("#dlCounts").onclick = function(){
-      download(slug(S.meta.name) + "-counts-" + stamp() + ".json",
-        JSON.stringify({meta: S.meta, db: S.db}, null, 2), "application/json");
+    root.querySelector("#dlAll").onclick = function(){
+      download(slug(S.meta.name) + "-" + stamp() + ".json", JSON.stringify({
+        _type: "inventory-walk-full", _version: 1,
+        _exported: new Date().toISOString(),
+        _note: "Everything: rooms, placements, units-per-case, nicknames, codes and this count. Load via Setup - Load a backup.",
+        site: S.site, locs: S.locs, place: S.place, units: S.units,
+        codes: S.codes, nick: S.nick,
+        meta: S.meta, db: S.db, rows: S.rows
+      }, null, 2), "application/json");
     };
     root.querySelector("#dlCsv").onclick = function(){
       var out = ["Location,Dist #,Description,Pack,Entered,Mode,Cases"];
@@ -1797,8 +1805,9 @@ function openSetup(){
     '<h3>Locations</h3>' +
     '<div class="hint" style="margin-bottom:9px">' + S.locs.length + ' rooms · ' +
       placed + ' items placed · ' + unitsN + ' with units-per-case set</div>' +
+    '<div class="hint" style="margin-bottom:9px">Takes either kind of backup — everything, or the map on its own.</div>' +
     '<div class="row2"><button id="addLoc">Add a location</button>' +
-    '<button id="loadMap">Load a map file</button>' +
+    '<button id="loadMap">Load a backup</button>' +
     '<button id="classMap">Build rooms from the sheet</button></div>' +
     '<div class="stack" style="margin-top:12px">' +
       S.locs.map(function(l){
@@ -1888,12 +1897,41 @@ function loadMapFile(file){
     Object.keys(kept).forEach(function(k){ S.place[k] = kept[k]; });
     Object.keys(units).forEach(function(k){ S.units[k] = units[k]; });
 
+    /* A full backup also carries the sheet and the count in progress. Taking
+       the sheet matters: the counts are keyed to the items on it, so loading
+       numbers without the spreadsheet they came from would leave them
+       pointing at nothing. */
+    var tookCount = 0, tookSheet = false;
+    if(j.db && j.meta && j.rows){
+      var mine = Object.keys(S.db).length;
+      var theirs = Object.keys(j.db).length;
+      var go = true;
+      if(mine){
+        go = confirm("This backup holds a count of " + theirs + " entries.\n\n" +
+                     "You have " + mine + " on this device. Loading replaces them.\n\n" +
+                     "OK to replace, Cancel to keep what is here.");
+      }
+      if(go){
+        S.rows  = j.rows;
+        S.meta  = j.meta;
+        S.db    = j.db;
+        S.items = parseRows(S.rows, S.meta.file, S.meta.sheet).items;
+        save(K.rows, S.rows); save(K.meta, S.meta); save(K.db, S.db);
+        tookCount = theirs; tookSheet = true;
+        S.loc = null; S.sel = null;
+      }
+    }
+    if(j.site && !S.site){ S.site = j.site; save(K.site, S.site); }
+
     save(K.place, S.place); save(K.units, S.units); save(K.locs, S.locs);
     save(K.codes, S.codes); save(K.nick, S.nick);
     render();
-    openModal('<h2>Map loaded</h2><table class="sum">' +
+    openModal('<h2>' + (tookSheet ? "Backup loaded" : "Map loaded") + '</h2><table class="sum">' +
+      (tookSheet ? '<tr><td>Counted items</td><td class="n">' + tookCount + '</td></tr>' +
+                   '<tr><td>Spreadsheet</td><td class="n">' + esc(S.meta.file || "—") + '</td></tr>' : '') +
       '<tr><td>Placements</td><td class="n">' + Object.keys(kept).length + '</td></tr>' +
       '<tr><td>Units-per-case</td><td class="n">' + Object.keys(units).length + '</td></tr>' +
+      '<tr><td>Nicknames</td><td class="n">' + Object.keys(j.nick || {}).length + '</td></tr>' +
       '<tr><td>Locations added</td><td class="n">' + addedLoc + '</td></tr>' +
       (dropped ? '<tr><td>Row-keyed entries dropped</td><td class="n">' + dropped + '</td></tr>' : '') +
       '</table>' +
