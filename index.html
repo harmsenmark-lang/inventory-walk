@@ -502,12 +502,15 @@ var K = {
   locs:  "wih_v1_locs",
   meta:  "wih_v1_meta",
   rows:  "wih_v1_rows",
-  last:  "wih_v1_lastroster",
+  roster:"wih_v1_lastroster",   /* item list from the previous import, for the added/dropped diff */
   codes: "wih_v1_codes",
   site:  "wih_v1_site",
   nick:  "wih_v1_nick",
-  last:  "wih_v1_lastcount"
+  last:  "wih_v1_lastcount",    /* last week's numbers, behind "Use last" */
+  mode:  "wih_v1_modepref"      /* items you count in units, so the card opens that way */
 };
+/* These two used to share one key name ("last"), so the second silently won
+   and every import wrote the item list over last week's numbers. */
 
 var S = {
   meta:  null,   /* {file, sheet, name, importedAt, cols, firstRow, lastRow, firstDesc, lastDesc} */
@@ -518,7 +521,9 @@ var S = {
   codes: {},     /* description -> scan code, for items with no Dist # */
   site:  null,   /* {name, seeded} — which building this device is counting */
   nick:  {},     /* keyOf(item) -> what the kitchen actually calls it */
-  lastq: {},     /* keyOf(item) -> cases counted last time round */
+  lastq: {},     /* keyOf(item) -> cases counted last time round, or
+                    {v: cases, q: units entered, m: "units"} when it was counted in units */
+  modePref: {},  /* keyOf(item) -> "units" when you count that item in units */
   db:    {},     /* key     -> {q, mode, loc, at, st} st: counted | zero | pending */
   locs:  [],
   loc:   null,
@@ -788,7 +793,7 @@ function askKeepOrClear(rows, p){
 function finishImport(rows, p, keep){
   /* Roster diff against the previous import. Compass adds items and almost
      never drops them, so a removal is worth seeing. */
-  var prev = load(K.last, null);
+  var prev = load(K.roster, null);
   var diff = null;
   if(prev && prev.length){
     var was = {}, now = {}, addedL = [], goneL = [];
@@ -809,7 +814,12 @@ function finishImport(rows, p, keep){
     var snap = {};
     S.items.forEach(function(it){
       var r = S.db[it.key];
-      if(r && (r.st === "counted" || r.st === "zero")) snap[keyOf(it)] = valueOf(r, it);
+      if(!r || (r.st !== "counted" && r.st !== "zero")) return;
+      var cs = valueOf(r, it);
+      /* Keep what was actually typed when it was units, so next week can show
+         "8 units" instead of only "1.000". The cases figure stays the truth. */
+      snap[keyOf(it)] = (r.st === "counted" && r.mode === "units")
+        ? {v: cs, q: r.q, m: "units"} : cs;
     });
     if(Object.keys(snap).length){ S.lastq = snap; save(K.last, S.lastq); }
   }
@@ -819,7 +829,7 @@ function finishImport(rows, p, keep){
   S.meta  = p.meta;
   if(!keep) S.db = {};
 
-  save(K.last, p.items.map(function(it){
+  save(K.roster, p.items.map(function(it){
     return {v: it.vendor || ("~" + it.desc), d: it.desc};
   }));
 
@@ -1040,9 +1050,37 @@ function nickOf(it){ return S.nick[keyOf(it)] || ""; }
 /* What this item came to last count. Spices, chemicals and paper barely move
    week to week, so carrying the number forward saves real time — and a wrong
    carry is visible, because the number is right there on the card. */
-function lastOf(it){
+function lastRecOf(it){
   var k = keyOf(it);
-  return Object.prototype.hasOwnProperty.call(S.lastq, k) ? S.lastq[k] : null;
+  if(!Object.prototype.hasOwnProperty.call(S.lastq, k)) return null;
+  var x = S.lastq[k];
+  if(x && typeof x === "object"){
+    var v = parseFloat(x.v);
+    if(isNaN(v)) return null;
+    return {v: v, q: parseFloat(x.q), m: x.m === "units" ? "units" : "cases"};
+  }
+  var n = parseFloat(x);
+  return isNaN(n) ? null : {v: n, q: n, m: "cases"};
+}
+/* Always cases — what goes in the spreadsheet. */
+function lastOf(it){
+  var L = lastRecOf(it);
+  return L ? L.v : null;
+}
+/* Last count expressed in units, when that can be done honestly: either it was
+   entered in units, or the cases figure comes out to a whole number of units
+   (0.833 × 6 = 5). Otherwise null, and the card sticks to cases. */
+function lastUnitsOf(it){
+  var L = lastRecOf(it);
+  if(!L) return null;
+  if(L.m === "units" && !isNaN(L.q)) return L.q;
+  var u = upc(it);
+  if(!(u > 1)) return null;
+  var x = L.v * u, rx = Math.round(x);
+  return Math.abs(x - rx) < 0.05 ? rx : null;
+}
+function fmtUnits(n){
+  return (Math.round(n * 1000) / 1000).toString();
 }
 function upc(it){
   var u = S.units[keyOf(it)];
@@ -1467,9 +1505,17 @@ function renderEntry(){
   $("entry").classList.remove("hide");
 
   var r = rec(it.key), home = placeOf(it);
-  var mode = (r && r.mode) || "cases";
   var u = upc(it);
   var lastQ = lastOf(it);
+  var lastU = lastUnitsOf(it);
+  var lastR = lastRecOf(it);
+  /* Open the way this item is usually counted: this week's entry if there is
+     one, else how you counted it before (remembered on this device, or how
+     last week's number was entered). Units needs a real units-per-case. */
+  var mode = (r && r.st === "counted" && r.mode) ||
+             S.modePref[keyOf(it)] ||
+             (lastR && lastR.m === "units" ? "units" : "") || "cases";
+  if(mode === "units" && !(u > 1)) mode = "cases";
 
   var where = home
     ? (home === S.loc ? '<b>' + esc(home) + '</b>' : '<b style="color:var(--amber)">' + esc(home) + '</b> → ' + esc(S.loc))
@@ -1487,7 +1533,8 @@ function renderEntry(){
         '</div>' +
         '<div class="r"><div class="k">Goes in the spreadsheet</div>' +
         '<div class="v" id="preview">' + (r && r.st !== "pending" ? fmt(valueOf(r, it)) : "0.000") + '</div>' +
-        (lastQ !== null ? '<div class="klast">last count ' + fmt(lastQ) + '</div>' : '') +
+        (lastQ !== null ? '<div class="klast">last count ' + fmt(lastQ) + ' cs' +
+          (lastU !== null && lastQ !== 0 ? ' · ' + fmtUnits(lastU) + (lastU === 1 ? ' unit' : ' units') : '') + '</div>' : '') +
         '</div>' +
       '</div>' +
       '<div class="entryrow">' +
@@ -1502,7 +1549,7 @@ function renderEntry(){
       '</div>' +
       '<div class="erow2">' +
         (lastQ !== null && !(r && r.st === "counted")
-           ? '<button id="lastBtn" class="lastbtn">Use last: ' + fmt(lastQ) + '</button>' : '') +
+           ? '<button id="lastBtn" class="lastbtn"></button>' : '') +
         '<button id="zeroBtn">None on hand</button>' +
         '<button id="notHereBtn">' + (home === S.loc ? "Not in this location" : "Set location") + '</button>' +
         '<button id="nickBtn">' + (nickOf(it) ? "Nickname: " + esc(nickOf(it)) : "Give it a nickname") + '</button>' +
@@ -1513,6 +1560,19 @@ function renderEntry(){
   var num = $("num");
   num.dataset.mode = mode;
   setTimeout(function(){ num.focus(); num.select(); }, 40);
+
+  /* "Use last" speaks whichever mode the card is in, so what you tap is what
+     you would have typed. */
+  function lastInUnits(){
+    return num.dataset.mode === "units" && lastU !== null && lastQ !== 0;
+  }
+  function lastLabel(){
+    var b = $("lastBtn");
+    if(!b) return;
+    b.textContent = "Use last: " + (lastQ === 0 ? "0"
+      : lastInUnits() ? fmtUnits(lastU) + (lastU === 1 ? " unit" : " units") : fmt(lastQ) + " cases");
+  }
+  lastLabel();
 
   function preview(){
     var q = parseFloat(num.value) || 0;
@@ -1553,17 +1613,24 @@ function renderEntry(){
       '<span class="sm">' + (num.dataset.mode === "units"
         ? (uu > 1 ? uu + " per case" : "tap for cases")
         : (uu > 1 ? "tap for units · " + uu + " per case" : "tap to set units")) + '</span>';
+    /* units-per-case may have just been set, which can make last week's
+       number expressible in units */
+    u = uu; lastU = lastUnitsOf(it);
+    lastLabel();
     preview();
     num.focus();
   };
 
   var lb = $("lastBtn");
   if(lb) lb.onclick = function(){
-    var q = lastOf(it);
-    if(q === null) return;
-    num.dataset.mode = "cases";
-    num.value = q;
-    commit(q === 0 ? "zero" : "counted");
+    if(lastQ === null) return;
+    if(lastInUnits()){
+      num.value = lastU;            /* stays in units */
+    } else {
+      num.dataset.mode = "cases";
+      num.value = lastQ;
+    }
+    commit(lastQ === 0 ? "zero" : "counted");
   };
 
   $("addBtn").onclick  = function(){ commit("counted"); };
@@ -1580,10 +1647,69 @@ function renderEntry(){
     renderEntry();
   };
 
-  function commit(st){
+  /* ---------- "does that look right?" ----------
+     The costly mistake is units typed as cases: 11 bars entered as 11 cases
+     of 48 goes on the sheet as 528 bars. Three checks, each only a question —
+     you can always keep the number. Returns null when nothing looks off. */
+  function sanityCheck(q, m){
+    if(!(q > 0) || m !== "cases") return null;
+    var per = upc(it);
+    var countsInUnits = S.modePref[keyOf(it)] === "units" || (lastR && lastR.m === "units");
+
+    /* 1. You normally count this one in units. */
+    if(countsInUnits && per > 1){
+      return "You usually count this one in units, but this was entered as <b>" + fmtUnits(q) +
+             " cases</b> (" + fmtUnits(q * per) + " units).";
+    }
+    /* 2. Way more than last week. */
+    if(lastQ !== null && lastQ > 0 && q > 3 * lastQ && q - lastQ >= 1){
+      return "<b>" + fmtUnits(q) + " cases</b> is a lot more than last count (" + fmt(lastQ) + " cases).";
+    }
+    /* 3. No history to go on, but a whole number this size on a big pack
+          reads like a count of pieces. */
+    if((lastQ === null || lastQ === 0) && per >= 12 && q >= 6 && q < per && q === Math.round(q)){
+      return "<b>" + fmtUnits(q) + " cases</b> of a " + per + "-per-case item is " +
+             fmtUnits(q * per) + " pieces. That is a lot to have on hand.";
+    }
+    return null;
+  }
+
+  function askSanity(q, why){
+    var per = upc(it);
+    openModal(
+      '<h2>Does that look right?</h2>' +
+      '<div class="note">' + esc(it.desc) + '<br><span class="hint">' + why + '</span></div>' +
+      '<div class="locpick">' +
+        (per > 1
+          ? '<button data-s="units"><b>It was ' + fmtUnits(q) + (q === 1 ? ' unit' : ' units') + '</b>' +
+            '<div class="hint">Saves ' + fmt(q / per) + ' cases (' + per + ' per case)</div></button>'
+          : '') +
+        '<button data-s="keep">Keep ' + fmtUnits(q) + ' cases' +
+          '<div class="hint">The number is right</div></button>' +
+        '<button data-s="fix">Change the number</button>' +
+      '</div>',
+      function(root){
+        root.querySelectorAll("[data-s]").forEach(function(b){
+          b.onclick = function(){
+            var s = b.dataset.s;
+            closeModal();
+            if(s === "units"){ num.dataset.mode = "units"; commit("counted", true); }
+            else if(s === "keep"){ commit("counted", true); }
+            else { num.focus(); num.select(); }
+          };
+        });
+      });
+  }
+
+  function commit(st, checked){
+    if(document.querySelector(".modal")) return;   /* a question is already open */
     var q = parseFloat(num.value);
     if(st === "zero") q = 0;
     if(st === "counted" && !(q >= 0)){ num.focus(); return; }
+    if(st === "counted" && !checked){
+      var why = sanityCheck(q, num.dataset.mode);
+      if(why){ askSanity(q, why); return; }
+    }
     var from = placeOf(it);
     S.undo.push({key: it.key, prev: S.db[it.key] ? JSON.parse(JSON.stringify(S.db[it.key])) : null,
                  prevPlace: from});
@@ -1593,6 +1719,13 @@ function renderEntry(){
       st: st === "zero" ? "zero" : "counted"
     };
     S.place[keyOf(it)] = S.loc;
+    /* Remember units vs cases for next time. A "none on hand" says nothing
+       about how you count it, so it leaves the setting alone. */
+    if(st !== "zero"){
+      if(num.dataset.mode === "units") S.modePref[keyOf(it)] = "units";
+      else delete S.modePref[keyOf(it)];
+      save(K.mode, S.modePref);
+    }
     save(K.db, S.db); save(K.place, S.place);
     S.sel = null;
     S.refocus = true;
@@ -1860,7 +1993,8 @@ function openExport(){
         _type: "inventory-walk-map", _version: 1,
         _exported: new Date().toISOString(),
         _note: "Placements and units-per-case. Load this on any device to inherit what you have taught the app.",
-        locs: S.locs, place: S.place, units: S.units, codes: S.codes, nick: S.nick
+        locs: S.locs, place: S.place, units: S.units, codes: S.codes, nick: S.nick,
+        modePref: S.modePref
       }, null, 2), "application/json");
     };
     root.querySelector("#dlAll").onclick = function(){
@@ -1869,7 +2003,7 @@ function openExport(){
         _exported: new Date().toISOString(),
         _note: "Everything: rooms, placements, units-per-case, nicknames, codes and this count. Load via Setup - Load a backup.",
         site: S.site, locs: S.locs, place: S.place, units: S.units,
-        codes: S.codes, nick: S.nick, lastq: S.lastq,
+        codes: S.codes, nick: S.nick, lastq: S.lastq, modePref: S.modePref,
         meta: S.meta, db: S.db, rows: S.rows
       }, null, 2), "application/json");
     };
@@ -2020,7 +2154,11 @@ function loadMapFile(file){
 
     if(j.codes) Object.keys(j.codes).forEach(function(k){ S.codes[k] = j.codes[k]; });
     if(j.nick)  Object.keys(j.nick).forEach(function(k){ S.nick[k] = j.nick[k]; });
-    if(j.lastq){ S.lastq = j.lastq; save(K.last, S.lastq); }
+    if(j.lastq && !Array.isArray(j.lastq)){ S.lastq = j.lastq; save(K.last, S.lastq); }
+    if(j.modePref){
+      Object.keys(j.modePref).forEach(function(k){ S.modePref[k] = j.modePref[k]; });
+      save(K.mode, S.modePref);
+    }
     var locs = j.locs || j.customLocations || [];
     var addedLoc = 0;
     locs.forEach(function(l){ if(l && S.locs.indexOf(l) < 0){ S.locs.push(l); addedLoc++; } });
@@ -2221,11 +2359,31 @@ function loadLastFile(file){
       var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], {header: 1, defval: ""});
       if(rows.length < 6) return;
       var C = detectCols(rows), filled = 0, i, r;
-      for(i = C.firstData; i < rows.length; i++){
-        r = rows[i];
-        if(!r || !r[C.desc]) continue;
-        if(r[C.qty] !== "" && r[C.qty] !== null && !isNaN(parseFloat(r[C.qty]))) filled++;
+      function countIn(col, nonzero){
+        var n = 0;
+        for(var j = C.firstData; j < rows.length; j++){
+          var rr = rows[j];
+          if(!rr || !rr[C.desc]) continue;
+          var v = rr[col];
+          if(v === "" || v === null || isNaN(parseFloat(v))) continue;
+          if(nonzero && parseFloat(v) === 0) continue;
+          n++;
+        }
+        return n;
       }
+      /* Counts are sometimes pasted into "Customer #" because it is the one
+         column the Compass sheet leaves open. That column is normally all
+         zeros, so take it only when the usual count column is empty and
+         Customer # holds real numbers. */
+      if(!countIn(C.qty, true)){
+        var hdr = rows[C.headerRow] || [];
+        for(var ci = 0; ci < hdr.length; ci++){
+          if(/customer/i.test(String(hdr[ci] || "")) && countIn(ci, true)){
+            C.qty = ci; C.qtyHeader = String(hdr[ci]).trim(); break;
+          }
+        }
+      }
+      filled = countIn(C.qty, false);
       if(!best || filled > best.filled) best = {rows: rows, cols: C, filled: filled, name: n};
     });
 
@@ -2302,6 +2460,10 @@ function boot(){
 
   S.nick  = load(K.nick, {}) || {};
   S.lastq = load(K.last, {}) || {};
+  /* The old key clash could leave the item list (an array) sitting where last
+     week's numbers belong. That is not a count — drop it. */
+  if(Array.isArray(S.lastq)){ S.lastq = {}; save(K.last, S.lastq); }
+  S.modePref = load(K.mode, {}) || {};
 
   S.codes = load(K.codes, null);
   if(!S.codes){
