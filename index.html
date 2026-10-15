@@ -1906,8 +1906,13 @@ function buildColumn(){
     var r = rec(it.key);
     byRow[it.rowIdx] = (r && (r.st === "counted" || r.st === "zero")) ? fmt(valueOf(r, it)) : "0.000";
   });
-  var rowsOut = [];
-  S.items.forEach(function(it){ rowsOut.push(byRow[it.rowIdx]); });
+  /* One line per SHEET row, first item to last. Rows the app skips
+     (USDA/NOI) go out blank so everything below them stays aligned —
+     otherwise the produce rows after the NOI block land 54 rows high. */
+  var rowsOut = [], first = S.meta.firstRow - 1, last = S.meta.lastRow - 1;
+  for(var i = first; i <= last; i++){
+    rowsOut.push(Object.prototype.hasOwnProperty.call(byRow, i) ? byRow[i] : "");
+  }
   return rowsOut;
 }
 
@@ -1952,7 +1957,11 @@ function openExport(){
     (S.meta.sheet ? 'Tab: <b>' + esc(S.meta.sheet) + '</b><br>' : '') +
     'First value goes with <b>' + esc(S.meta.firstDesc || "—") + '</b> (sheet row ' + S.meta.firstRow + ')<br>' +
     'Last value goes with <b>' + esc(S.meta.lastDesc || "—") + '</b> (sheet row ' + S.meta.lastRow + ')<br>' +
-    lines.length + ' rows. If those do not line up, do not paste.</div>' +
+    lines.length + ' rows' +
+    (lines.length > S.items.length
+      ? ' — ' + (lines.length - S.items.length) + ' of them blank for the USDA/NOI rows, so anything typed there gets cleared. Fill those in after you paste'
+      : '') +
+    '. If those do not line up, do not paste.</div>' +
     '<button class="bigbtn green" id="copyBtn">Copy ' + lines.length + ' rows</button>' +
     '<div class="hint">Click the first quantity cell, then paste. Values are in cases — the same unit the sheet uses. Nothing is converted on the way out.</div>' +
     '<h3>Backups</h3><div class="row2">' +
